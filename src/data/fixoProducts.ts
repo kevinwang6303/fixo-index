@@ -44,7 +44,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       { label: '安全等級', value: '企業級零信任 (Zero Trust) 身分驗證' },
       { label: '防護機制', value: '30分鐘自動登出 + 30秒暴力節流 + 備用碼' }
     ],
-    manualSection: '手冊第 4 章：CAM 帳戶管理服務 (4.1~4.4)'
+    manualSection: '手冊第 4 章：CAM 帳戶管理服務 (4.1~4.4)',
+    markdownFile: '01_CAM_帳戶管理服務.md'
   },
   {
     id: 'vpc',
@@ -90,7 +91,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       { label: '路由支援', value: '子網主機路由 (Host Routes) + 路由器靜態路由' },
       { label: '高可用性', value: 'Allowed Address Pairs (Keepalived / VRRP)' }
     ],
-    manualSection: '手冊第 5 章：VPC 虛擬私有網路服務 (5.1~5.5)'
+    manualSection: '手冊第 5 章：VPC 虛擬私有網路服務 (5.1~5.5)',
+    markdownFile: '02_VPC_虛擬私有網路服務.md'
   },
   {
     id: 'fico',
@@ -137,7 +139,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       { label: '容災規格', value: '伺服器反親和性 + 跨區域 (Cross-Region) 異地備份' },
       { label: '安全認證', value: 'SSH 4096 Keypair + 安全群組 (Security Group)' }
     ],
-    manualSection: '手冊第 6 章：FiCo 計算機服務 (6.1~6.10)'
+    manualSection: '手冊第 6 章：FiCo 計算機服務 (6.1~6.10)',
+    markdownFile: '03_FiCo_計算機服務.md'
   },
   {
     id: 'fibo',
@@ -183,7 +186,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       { label: '資料耐久度', value: '99.999999999% (11 個 9) 擦除碼冗餘架構' },
       { label: '加密機制', value: 'KMS 對稱式 AES 伺服器端落盤加密 (SSE)' }
     ],
-    manualSection: '手冊第 7 章：FiBo 物件儲存服務 (7.1~7.2)'
+    manualSection: '手冊第 7 章：FiBo 物件儲存服務 (7.1~7.2)',
+    markdownFile: '04_FiBo_物件儲存服務.md'
   },
   {
     id: 'lbs',
@@ -229,7 +233,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       { label: '政策引擎', value: 'REJECT > REDIRECT_URL > REDIRECT_POOL 優先級匹配' },
       { label: '逾時精度', value: '毫秒級 (Client 50s / Connect 5s / Member 50s)' }
     ],
-    manualSection: '手冊第 8 章：LBS 負載平衡服務 (8.1~8.2)'
+    manualSection: '手冊第 8 章：LBS 負載平衡服務 (8.1~8.2)',
+    markdownFile: '05_LBS_負載平衡服務.md'
   },
   {
     id: 'cis',
@@ -275,7 +280,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       { label: '儲存與網路', value: 'CSI 雲磁碟動態 PVC + CNI VPC 扁平網路' },
       { label: '映像認證', value: '節點組層級私有鏡像倉庫 (Harbor/Docker)' }
     ],
-    manualSection: '手冊第 9 章：CIS 容器基礎設施服務 (9.1~9.2)'
+    manualSection: '手冊第 9 章：CIS 容器基礎設施服務 (9.1~9.2)',
+    markdownFile: '06_CIS_容器基礎設施服務.md'
   },
   {
     id: 'kms',
@@ -320,7 +326,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       { label: '憑證格式', value: 'X.509 PEM / CRT / PUB / KEY (含 CA Chain)' },
       { label: '防誤操作', value: '引用狀態自動標記「使用中 (In Use)」防刪除' }
     ],
-    manualSection: '手冊第 10 章：KMS 金鑰管理服務 (10.1~10.3)'
+    manualSection: '手冊第 10 章：KMS 金鑰管理服務 (10.1~10.3)',
+    markdownFile: '07_KMS_金鑰管理服務.md'
   },
   {
     id: 'fiwo',
@@ -366,7 +373,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       { label: '網路架構', value: '雙浮動 IP 雙軌代理 (Console IP + RDGW IP)' },
       { label: '身分驗證', value: '整合 Windows Server Active Directory / Kerberos' }
     ],
-    manualSection: '手冊第 11 章：FiWo 桌面雲端服務 (11.1)'
+    manualSection: '手冊第 11 章：FiWo 桌面雲端服務 (11.1)',
+    markdownFile: '08_FiWo_桌面雲端服務.md'
   },
   {
     id: 'bds',
@@ -412,7 +420,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       { label: '安全認證', value: 'MIT Kerberos 企業級 Principal / Keytab 身分驗證' },
       { label: '高可用架構', value: 'HA NameNode + ResourceManager + ZooKeeper' }
     ],
-    manualSection: '手冊第 12 章：BDS 大數據服務 (12.1~12.3)'
+    manualSection: '手冊第 12 章：BDS 大數據服務 (12.1~12.3)',
+    markdownFile: '09_BDS_大數據服務.md'
   },
   {
     id: 'meter',
@@ -458,7 +467,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       { label: '審計欄位', value: '時間戳 / 帳號 / 來源 IP / 服務 / 操作行為 / 執行結果' },
       { label: '匯出相容', value: 'Microsoft Excel (.xlsx) / 標準 CSV / API 串接' }
     ],
-    manualSection: '手冊第 13 章：Meter 資源計量服務 (13.1~13.3)'
+    manualSection: '手冊第 13 章：Meter 資源計量服務 (13.1~13.3)',
+    markdownFile: '10_Meter_資源計量服務.md'
   }
 ];
 
