@@ -23,7 +23,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       x: 1200,
       y: 280,
       width: 140,
-      height: 120
+      height: 120,
+      pos3D: { x: 0, y: 0, z: -28 }
     },
     features: [
       { name: '個人與組織資訊', desc: '集中管理多組織、團隊角色與個人聯絡資料，權責分明。' },
@@ -60,7 +61,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       x: 880,
       y: 620,
       width: 150,
-      height: 130
+      height: 130,
+      pos3D: { x: -22, y: 0, z: -14 }
     },
     features: [
       { name: '私有子網劃分', desc: '靈活規劃多層次網路架構（公有子網、私有計算子網、資料庫隔離區）。' },
@@ -97,7 +99,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       x: 1200,
       y: 600,
       width: 160,
-      height: 140
+      height: 140,
+      pos3D: { x: 0, y: 0, z: -14 }
     },
     features: [
       { name: '彈性虛擬機 (VM)', desc: '數十種 vCPU / RAM 規格即開即用，支援秒級部署與線上調整規格。' },
@@ -134,7 +137,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       x: 1540,
       y: 620,
       width: 150,
-      height: 130
+      height: 130,
+      pos3D: { x: 22, y: 0, z: -14 }
     },
     features: [
       { name: '儲存桶 (Bucket) 管理', desc: '直覺化建立與命名儲存桶，支援存取控制清單 (ACL) 與生命週期轉檔。' },
@@ -171,7 +175,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       x: 880,
       y: 960,
       width: 140,
-      height: 130
+      height: 130,
+      pos3D: { x: -22, y: 0, z: 8 }
     },
     features: [
       { name: '進階負載平衡器', desc: '支援公網及私網專用負載平衡，輕鬆應對突發百萬流量峰值。' },
@@ -208,7 +213,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       x: 1200,
       y: 960,
       width: 160,
-      height: 130
+      height: 130,
+      pos3D: { x: 0, y: 0, z: 8 }
     },
     features: [
       { name: 'Kubernetes 託管叢集', desc: '標準 CNCF 認證 K8s 環境，免去繁瑣的 Control Plane 維護負擔。' },
@@ -245,7 +251,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       x: 1540,
       y: 960,
       width: 140,
-      height: 130
+      height: 130,
+      pos3D: { x: 22, y: 0, z: 8 }
     },
     features: [
       { name: '數位安全憑證管理', desc: '集中上傳、簽發與監控 SSL/TLS 伺服器憑證有效期限，避免過期斷線。' },
@@ -282,7 +289,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       x: 880,
       y: 1300,
       width: 140,
-      height: 130
+      height: 130,
+      pos3D: { x: -22, y: 0, z: 26 }
     },
     features: [
       { name: '即開即用工作區 (Workspace)', desc: '數分鐘內完成 Windows / Linux 虛擬桌面開通與員工配發。' },
@@ -319,7 +327,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       x: 1200,
       y: 1300,
       width: 160,
-      height: 130
+      height: 130,
+      pos3D: { x: 0, y: 0, z: 26 }
     },
     features: [
       { name: '分散式運算叢集', desc: '彈性建立並擴展 Spark、Hadoop 等大數據節點，具備自動節點自我修復。' },
@@ -356,7 +365,8 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       x: 1540,
       y: 1300,
       width: 140,
-      height: 130
+      height: 130,
+      pos3D: { x: 22, y: 0, z: 26 }
     },
     features: [
       { name: '視覺化用量報表', desc: '依照日、月或帳單週期產出多維度資源統計圖表，成本花費一目了然。' },

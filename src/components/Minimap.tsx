@@ -4,33 +4,30 @@ import { MapPin, Navigation } from 'lucide-react';
 
 interface MinimapProps {
   products: FixoProduct[];
-  playerPos: { x: number; y: number };
+  playerPos: { x: number; z: number };
   visitedIds: Set<string>;
   onTeleport: (product: FixoProduct) => void;
-  worldWidth: number;
-  worldHeight: number;
 }
 
 export const Minimap: React.FC<MinimapProps> = ({
   products,
   playerPos,
   visitedIds,
-  onTeleport,
-  worldWidth,
-  worldHeight
+  onTeleport
 }) => {
   const mapWidth = 200;
-  const mapHeight = 145;
+  const mapHeight = 150;
+  const bound = 42; // Coordinates range -42 to +42
 
-  const scaleX = mapWidth / worldWidth;
-  const scaleY = mapHeight / worldHeight;
+  const toMapX = (wx: number) => ((wx + bound) / (bound * 2)) * mapWidth;
+  const toMapY = (wz: number) => ((wz + bound) / (bound * 2)) * mapHeight;
 
   return (
     <div className="bg-slate-900/80 backdrop-blur-md border border-slate-700/70 rounded-2xl p-2.5 shadow-2xl flex flex-col gap-1.5 select-none">
       <div className="flex items-center justify-between px-1 text-[11px] font-mono font-semibold text-slate-300">
         <span className="flex items-center gap-1">
           <Navigation className="w-3 h-3 text-sky-400" />
-          全島雷達 (Minimap)
+          全島 3D 雷達
         </span>
         <span className="text-[10px] text-slate-400">點擊地標傳送</span>
       </div>
@@ -41,7 +38,13 @@ export const Minimap: React.FC<MinimapProps> = ({
       >
         {/* Island outline visual */}
         <div 
-          className="absolute inset-2 rounded-2xl border border-sky-500/20 bg-sky-950/20 pointer-events-none"
+          className="absolute inset-2 rounded-full border border-sky-500/30 bg-sky-950/20 pointer-events-none shadow-[inset_0_0_15px_rgba(56,189,248,0.1)]"
+        />
+
+        {/* Central Plaza marker */}
+        <div 
+          className="absolute w-3 h-3 rounded-full border border-sky-400/50 bg-sky-400/20 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          style={{ left: `${mapWidth / 2}px`, top: `${mapHeight / 2}px` }}
         />
 
         {/* Grid lines */}
@@ -49,8 +52,8 @@ export const Minimap: React.FC<MinimapProps> = ({
 
         {/* Buildings markers */}
         {products.map((p) => {
-          const mx = p.building.x * scaleX;
-          const my = p.building.y * scaleY;
+          const mx = toMapX(p.building.pos3D.x);
+          const my = toMapY(p.building.pos3D.z);
           const isVisited = visitedIds.has(p.id);
 
           return (
@@ -76,17 +79,21 @@ export const Minimap: React.FC<MinimapProps> = ({
           );
         })}
 
-        {/* Player icon marker */}
+        {/* Sean player avatar icon marker */}
         <div
           className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none z-20"
           style={{
-            left: `${playerPos.x * scaleX}px`,
-            top: `${playerPos.y * scaleY}px`
+            left: `${toMapX(playerPos.x)}px`,
+            top: `${toMapY(playerPos.z)}px`
           }}
         >
           <div className="relative flex items-center justify-center">
             <div className="w-4 h-4 rounded-full bg-amber-400/30 animate-ping absolute" />
-            <div className="w-2.5 h-2.5 rounded-full bg-amber-400 border border-white shadow-[0_0_8px_#f59e0b]" />
+            <img 
+              src="./sean.png" 
+              alt="Sean" 
+              className="w-5 h-5 object-contain rounded-full border border-amber-300 bg-amber-400/20 shadow-[0_0_8px_#f59e0b]"
+            />
           </div>
         </div>
       </div>
@@ -94,7 +101,7 @@ export const Minimap: React.FC<MinimapProps> = ({
       <div className="flex items-center justify-between text-[10px] text-slate-400 px-1 font-mono">
         <span className="flex items-center gap-1">
           <MapPin className="w-2.5 h-2.5 text-amber-400" />
-          X:{Math.round(playerPos.x)} Y:{Math.round(playerPos.y)}
+          Sean: {Math.round(playerPos.x)}, {Math.round(playerPos.z)}
         </span>
         <span className="text-emerald-400 font-semibold">
           {visitedIds.size}/{products.length} 已發掘

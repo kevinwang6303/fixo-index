@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FIXO_PRODUCTS } from './data/fixoProducts';
 import { FixoProduct } from './types/product';
-import { GameCanvas } from './components/GameCanvas';
+import { ThreeCanvas } from './components/ThreeCanvas';
 import { ProductModal } from './components/ProductModal';
 import { Minimap } from './components/Minimap';
 import { QuestTracker } from './components/QuestTracker';
@@ -15,12 +15,11 @@ import {
   HelpCircle, 
   Gamepad2, 
   Sparkles,
-  Info
+  Info,
+  Box
 } from 'lucide-react';
 
 const STORAGE_KEY = 'fixo_island_visited_v1';
-const WORLD_WIDTH = 2400;
-const WORLD_HEIGHT = 1750;
 
 export default function App() {
   const [visitedIds, setVisitedIds] = useState<Set<string>>(() => {
@@ -42,10 +41,10 @@ export default function App() {
   const [showJoystick, setShowJoystick] = useState(false);
   const [showWelcomeTip, setShowWelcomeTip] = useState(true);
 
-  // Player position state for minimap & HUD
-  const [playerPos, setPlayerPos] = useState({ x: 1200, y: 960 }); // Spawn at central plaza
+  // 3D Player position state for minimap & HUD (Centered at origin)
+  const [playerPos3D, setPlayerPos3D] = useState({ x: 0, z: 0 });
   const [joystickVector, setJoystickVector] = useState({ x: 0, y: 0 });
-  const [teleportTarget, setTeleportTarget] = useState<{ x: number; y: number } | null>(null);
+  const [teleportTarget, setTeleportTarget] = useState<{ x: number; z: number } | null>(null);
 
   // Auto detect touch device
   useEffect(() => {
@@ -70,10 +69,10 @@ export default function App() {
   }, []);
 
   const handleTeleport = (product: FixoProduct) => {
-    // Teleport slightly in front of the building
+    // Teleport slightly in front of the 3D pavilion entrance
     setTeleportTarget({
-      x: product.building.x,
-      y: product.building.y + 60
+      x: product.building.pos3D.x,
+      z: product.building.pos3D.z + 4.5
     });
   };
 
@@ -86,13 +85,13 @@ export default function App() {
 
   return (
     <main className="relative w-screen h-screen overflow-hidden bg-slate-950 font-sans text-slate-100 select-none">
-      {/* 1. Main Interactive Game Canvas */}
-      <GameCanvas
+      {/* 1. Main 3D WebGL Three.js Scene */}
+      <ThreeCanvas
         products={FIXO_PRODUCTS}
         activeProduct={activeProduct}
         onOpenProduct={(p) => setActiveProduct(p)}
-        playerPos={playerPos}
-        setPlayerPos={setPlayerPos}
+        playerPos3D={playerPos3D}
+        setPlayerPos3D={setPlayerPos3D}
         joystickVector={joystickVector}
         teleportTarget={teleportTarget}
         clearTeleport={() => setTeleportTarget(null)}
@@ -101,19 +100,20 @@ export default function App() {
       {/* 2. Top Header Navigation Bar */}
       <header className="absolute top-0 left-0 right-0 p-3 sm:p-4 flex items-center justify-between gap-3 pointer-events-none z-30">
         {/* Brand Logo & Version */}
-        <div className="flex items-center gap-3 bg-slate-900/80 backdrop-blur-md border border-slate-700/70 px-3.5 py-2 rounded-2xl shadow-xl pointer-events-auto">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-500 flex items-center justify-center text-lg shadow-md shadow-sky-500/20">
-            ☁️
+        <div className="flex items-center gap-3 bg-slate-900/85 backdrop-blur-md border border-slate-700/80 px-3.5 py-2 rounded-2xl shadow-xl pointer-events-auto">
+          <div className="relative w-9 h-9 rounded-xl overflow-hidden border border-amber-400/50 bg-gradient-to-tr from-amber-500/20 to-sky-500/20 flex items-center justify-center shadow-md">
+            <img src="./sean.png" alt="Sean" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-sm tracking-wide text-white">FiXo 雲端探索之島</span>
-              <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-sky-500/20 text-sky-300 border border-sky-400/30">
-                v5.4.1.0
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
+                <Box className="w-3 h-3" />
+                3D 版
               </span>
             </div>
             <div className="text-[10px] text-slate-400 hidden sm:block">
-              Foxconn Cloud Platform Interactive Tour
+              Sean's Foxconn FiXo 3D Interactive Tour
             </div>
           </div>
         </div>
@@ -185,12 +185,17 @@ export default function App() {
       {/* 3. Welcome / Gameplay Tip Banner */}
       {showWelcomeTip && (
         <aside aria-label="操作引導" className="absolute bottom-4 left-4 z-20 max-w-sm pointer-events-auto">
-          <div className="bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3 rounded-2xl shadow-2xl flex items-start gap-2.5">
-            <Sparkles className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          <div className="bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3.5 rounded-2xl shadow-2xl flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-amber-400/50 bg-slate-800 flex items-center justify-center">
+              <img src="./sean.png" alt="Sean" className="w-full h-full object-contain" />
+            </div>
             <div className="flex-1 text-xs">
-              <div className="font-bold text-white mb-0.5">歡迎蒞臨 FiXo 探索之島！</div>
+              <div className="font-bold text-white mb-0.5 flex items-center gap-1.5">
+                <span>Sean 的 3D 浮空島冒險！</span>
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              </div>
               <p className="text-slate-300 leading-relaxed">
-                使用 <kbd className="px-1 rounded bg-slate-800 text-sky-400 font-mono">WASD</kbd> 或方向鍵行走，也可<strong className="text-sky-300">點擊地圖任意處</strong>前往。靠近建築按 <kbd className="px-1 rounded bg-slate-800 text-sky-400 font-mono">SPACE</kbd> 即可探索各項雲端產品！
+                操控 Sean 使用 <kbd className="px-1 rounded bg-slate-800 text-sky-400 font-mono">WASD</kbd> 或方向鍵在 3D 島嶼漫遊，亦可<strong className="text-sky-300">點擊 3D 地面</strong>移動。靠近展館按 <kbd className="px-1 rounded bg-slate-800 text-sky-400 font-mono">SPACE</kbd> 查看產品！
               </p>
             </div>
             <button
@@ -219,11 +224,9 @@ export default function App() {
       <div className="absolute bottom-4 right-4 z-20 pointer-events-auto">
         <Minimap
           products={FIXO_PRODUCTS}
-          playerPos={playerPos}
+          playerPos={playerPos3D}
           visitedIds={visitedIds}
           onTeleport={handleTeleport}
-          worldWidth={WORLD_WIDTH}
-          worldHeight={WORLD_HEIGHT}
         />
       </div>
 
@@ -257,7 +260,7 @@ export default function App() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <h2 className="text-base font-bold text-white flex items-center gap-2">
                 <Info className="w-4 h-4 text-sky-400" />
-                探索指南與操作說明
+                3D 浮空島操作指南
               </h2>
               <button
                 type="button"
@@ -269,29 +272,30 @@ export default function App() {
             </div>
 
             <div className="space-y-3 text-xs text-slate-300">
+              <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center gap-3">
+                <img src="./sean.png" alt="Sean" className="w-12 h-12 object-contain bg-slate-900 rounded-xl border border-slate-700 p-1" />
+                <div>
+                  <div className="font-bold text-white mb-0.5">主角：Sean 探索員</div>
+                  <div className="text-slate-400">穿梭於 FiXo 雲端 10 大核心產品設施，支援 3D 陰影、步態傾斜與自動朝向。</div>
+                </div>
+              </div>
+
               <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-                <div className="font-bold text-white mb-1">🎮 移動方式</div>
+                <div className="font-bold text-white mb-1">🎮 3D 移動方式</div>
                 <ul className="list-disc list-inside space-y-1 text-slate-400">
                   <li><strong className="text-slate-200">鍵盤</strong>：方向鍵 或 W, A, S, D 鍵。</li>
-                  <li><strong className="text-slate-200">滑鼠/點擊</strong>：點擊地圖任意處，角色將自動走往目標。</li>
-                  <li><strong className="text-slate-200">觸控搖桿</strong>：可點擊右上角搖桿按鈕開啟虛擬搖桿。</li>
+                  <li><strong className="text-slate-200">滑鼠/點擊</strong>：點擊 3D 地面任意處，Sean 將自動走向目標點。</li>
+                  <li><strong className="text-slate-200">觸控搖桿</strong>：點擊右上角搖桿按鈕開啟虛擬搖桿。</li>
                 </ul>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
                 <div className="font-bold text-white mb-1">🔍 互動與查看產品</div>
                 <ul className="list-disc list-inside space-y-1 text-slate-400">
-                  <li>走到各大建築展館周邊，按下 <kbd className="px-1.5 py-0.5 rounded bg-slate-800 font-mono text-sky-300">SPACE</kbd> 或 <kbd className="px-1.5 py-0.5 rounded bg-slate-800 font-mono text-sky-300">E</kbd> 鍵。</li>
-                  <li>直接用滑鼠點擊該建築物。</li>
-                  <li>利用右下角「全島雷達」或右上角「產品目錄」一鍵傳送。</li>
+                  <li>走近 3D 展館光圈，按 <kbd className="px-1.5 py-0.5 rounded bg-slate-800 font-mono text-sky-300">SPACE</kbd> 或 <kbd className="px-1.5 py-0.5 rounded bg-slate-800 font-mono text-sky-300">E</kbd> 鍵。</li>
+                  <li>直接用滑鼠點擊 3D 建築本體。</li>
+                  <li>利用右下角「全島 3D 雷達」或右上角「產品目錄」一鍵傳送。</li>
                 </ul>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-                <div className="font-bold text-white mb-1">📖 內容依據</div>
-                <p className="text-slate-400 leading-relaxed">
-                  本展覽島依據《FiXo User Portal Manual v5.4.1.0 繁體》大章節架構規劃，涵蓋 CAM、VPC、FiCo、FiBo、LBS、CIS、KMS、FiWo、BDS、Meter 完整雲端矩陣。
-                </p>
               </div>
             </div>
 
@@ -300,7 +304,7 @@ export default function App() {
               onClick={() => setIsHelpOpen(false)}
               className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
             >
-              我知道了，開始探索！
+              開始 3D 探索！
             </button>
           </div>
         </div>
