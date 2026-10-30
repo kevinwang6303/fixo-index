@@ -265,10 +265,10 @@ export default function App() {
         />
       </div>
 
-      {/* 3. Mascot Pill (Heart Island signature mascot: •ᴗ• Sean · 鍵盤移動，滑鼠旋轉視角) */}
+      {/* 3. Mascot Pill (Heart Island signature mascot: •ᴗ• FiXo 探索員 · 鍵盤移動，滑鼠旋轉視角) */}
       <div className="absolute bottom-20 left-4 z-20 pointer-events-auto hidden sm:flex items-center gap-2 bg-[#fff8f4]/90 backdrop-blur-md border border-[#c5b5a7]/60 px-3.5 py-1.5 rounded-full shadow-lg text-xs font-medium text-slate-700">
         <span className="text-[#db6a41] font-bold text-sm">•ᴗ•</span>
-        <span>Sean · 按 WASD 漫步，滑鼠旋轉視角</span>
+        <span>FiXo 雲端探索員 · 按 WASD 漫步，滑鼠旋轉視角</span>
       </div>
 
       {/* 4. Welcome / Gameplay Tip Banner */}

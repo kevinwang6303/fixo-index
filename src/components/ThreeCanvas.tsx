@@ -487,26 +487,26 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       buildingMeshes.push({ product: prod, group: bGroup, beacon });
     });
 
-    // 6. Sean Avatar Character (Using sean.png)
+    // 6. Explorer Avatar Character
     const textureLoader = new THREE.TextureLoader();
-    const seanTexture = textureLoader.load('./sean.png');
-    seanTexture.magFilter = THREE.NearestFilter;
-    seanTexture.minFilter = THREE.LinearMipMapLinearFilter;
+    const avatarTexture = textureLoader.load('./avatar.png');
+    avatarTexture.magFilter = THREE.NearestFilter;
+    avatarTexture.minFilter = THREE.LinearMipMapLinearFilter;
 
-    // Sean Billboard mesh
-    const seanHeight = 2.8;
-    const seanWidth = 2.35;
-    const seanGeo = new THREE.PlaneGeometry(seanWidth, seanHeight);
-    const seanMat = new THREE.MeshStandardMaterial({
-      map: seanTexture,
+    // Explorer Billboard mesh
+    const avatarHeight = 2.8;
+    const avatarWidth = 2.35;
+    const avatarGeo = new THREE.PlaneGeometry(avatarWidth, avatarHeight);
+    const avatarMat = new THREE.MeshStandardMaterial({
+      map: avatarTexture,
       transparent: true,
       alphaTest: 0.1,
       roughness: 0.3,
       metalness: 0.1,
       side: THREE.DoubleSide
     });
-    const playerMesh = new THREE.Mesh(seanGeo, seanMat);
-    playerMesh.position.set(playerStateRef.current.x, seanHeight / 2, playerStateRef.current.z);
+    const playerMesh = new THREE.Mesh(avatarGeo, avatarMat);
+    playerMesh.position.set(playerStateRef.current.x, avatarHeight / 2, playerStateRef.current.z);
     playerMesh.castShadow = true;
     scene.add(playerMesh);
 
@@ -659,11 +659,11 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         }
       }
 
-      // --- Update Sean Avatar Mesh ---
+      // --- Update Explorer Avatar Mesh ---
       playerMesh.scale.x = p.facingLeft ? -1 : 1;
       const walkBob = p.isMoving ? Math.sin(p.walkTimer) * 0.18 : Math.sin(ticks * 0.06) * 0.06;
-      playerMesh.position.set(p.x, (seanHeight / 2) + walkBob, p.z);
-      // Billboard Sean to face the camera
+      playerMesh.position.set(p.x, (avatarHeight / 2) + walkBob, p.z);
+      // Billboard Explorer to face the camera
       playerMesh.rotation.y = camera.rotation.y;
       playerShadow.position.set(p.x, 0.06, p.z);
 
