@@ -28,12 +28,17 @@ export interface FixoProduct {
   building: {
     name: string;
     symbol: string;
-    x: number; // World coordinates
+    x: number; // 2D coordinates
     y: number;
     width: number;
     height: number;
+    pos3D: { x: number; y: number; z: number }; // 3D World coordinates
+    hex: { q: number; r: number };
   };
   features: ProductFeature[];
   specs: ProductSpec[];
   manualSection: string;
+  markdownFile: string;
+  story3D?: string;
+  highlights?: string[];
 }

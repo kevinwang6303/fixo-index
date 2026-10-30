@@ -54,8 +54,8 @@ export const QuickNav: React.FC<QuickNavProps> = ({
               <Compass className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">FiXo 產品全景導覽 (Product Index)</h2>
-              <p className="text-xs text-slate-400">快速瞬移至對應展館或直接查閱手冊細節</p>
+              <h2 className="text-lg font-bold text-white">FiXo 太空艙全景導覽 (Capsule Index)</h2>
+              <p className="text-xs text-slate-400">快速瞬移至對應太空艙室或直接查閱原廠手冊</p>
             </div>
           </div>
           <button

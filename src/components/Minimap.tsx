@@ -30,19 +30,22 @@ export const Minimap: React.FC<MinimapProps> = ({
       <div className="flex items-center justify-between px-1 text-[11px] font-mono font-semibold text-slate-300">
         <span className="flex items-center gap-1">
           <Navigation className="w-3 h-3 text-sky-400" />
-          全島雷達 (Minimap)
+          星艦全艦雷達 (Ship Radar)
         </span>
-        <span className="text-[10px] text-slate-400">點擊地標傳送</span>
+        <span className="text-[10px] text-slate-400">點擊艙室瞬移</span>
       </div>
 
       <div 
         className="relative bg-slate-950/90 rounded-xl overflow-hidden border border-slate-800"
         style={{ width: `${mapWidth}px`, height: `${mapHeight}px` }}
       >
-        {/* Island outline visual */}
+        {/* Starship Shuttle outline visual */}
         <div 
-          className="absolute inset-2 rounded-2xl border border-sky-500/20 bg-sky-950/20 pointer-events-none"
+          className="absolute inset-2 rounded-2xl border border-sky-500/25 bg-sky-950/20 pointer-events-none"
         />
+        {/* Solar wings indicators on left & right of minimap */}
+        <div className="absolute top-8 left-1 w-2.5 h-16 border border-cyan-400/40 bg-cyan-900/30 rounded-xs pointer-events-none" />
+        <div className="absolute top-8 right-1 w-2.5 h-16 border border-cyan-400/40 bg-cyan-900/30 rounded-xs pointer-events-none" />
 
         {/* Grid lines */}
         <div className="absolute inset-0 bg-[radial-gradient(#38bdf815_1px,transparent_1px)] [background-size:12px_12px] pointer-events-none" />

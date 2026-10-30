@@ -42,8 +42,8 @@ export default function App() {
   const [showJoystick, setShowJoystick] = useState(false);
   const [showWelcomeTip, setShowWelcomeTip] = useState(true);
 
-  // Player position state for minimap & HUD
-  const [playerPos, setPlayerPos] = useState({ x: 1200, y: 960 }); // Spawn at central plaza
+  // Player position state for minimap & HUD (Spawn at Command Bridge)
+  const [playerPos, setPlayerPos] = useState({ x: 1200, y: 830 });
   const [joystickVector, setJoystickVector] = useState({ x: 0, y: 0 });
   const [teleportTarget, setTeleportTarget] = useState<{ x: number; y: number } | null>(null);
 
@@ -103,17 +103,17 @@ export default function App() {
         {/* Brand Logo & Version */}
         <div className="flex items-center gap-3 bg-slate-900/80 backdrop-blur-md border border-slate-700/70 px-3.5 py-2 rounded-2xl shadow-xl pointer-events-auto">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-500 flex items-center justify-center text-lg shadow-md shadow-sky-500/20">
-            ☁️
+            🚀
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-sm tracking-wide text-white">FiXo 雲端探索之島</span>
+              <span className="font-bold text-sm tracking-wide text-white">FiXo 星際太空梭旗艦</span>
               <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-sky-500/20 text-sky-300 border border-sky-400/30">
                 v5.4.1.0
               </span>
             </div>
             <div className="text-[10px] text-slate-400 hidden sm:block">
-              Foxconn Cloud Platform Interactive Tour
+              Foxconn Starship Flagship // Space Capsule Tour
             </div>
           </div>
         </div>
@@ -188,9 +188,9 @@ export default function App() {
           <div className="bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3 rounded-2xl shadow-2xl flex items-start gap-2.5">
             <Sparkles className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div className="flex-1 text-xs">
-              <div className="font-bold text-white mb-0.5">歡迎蒞臨 FiXo 探索之島！</div>
+              <div className="font-bold text-white mb-0.5">歡迎登上 FiXo 星際太空梭！</div>
               <p className="text-slate-300 leading-relaxed">
-                使用 <kbd className="px-1 rounded bg-slate-800 text-sky-400 font-mono">WASD</kbd> 或方向鍵行走，也可<strong className="text-sky-300">點擊地圖任意處</strong>前往。靠近建築按 <kbd className="px-1 rounded bg-slate-800 text-sky-400 font-mono">SPACE</kbd> 即可探索各項雲端產品！
+                使用 <kbd className="px-1 rounded bg-slate-800 text-sky-400 font-mono">WASD</kbd> 噴射推進飛行，<strong className="text-sky-300">人物於零重力環境懸浮漂浮（腳完全不著地）</strong>。每個產品皆為獨立太空艙室，靠近按 <kbd className="px-1 rounded bg-slate-800 text-sky-400 font-mono">SPACE</kbd> 或點擊即可進入探索！
               </p>
             </div>
             <button
@@ -270,27 +270,28 @@ export default function App() {
 
             <div className="space-y-3 text-xs text-slate-300">
               <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-                <div className="font-bold text-white mb-1">🎮 移動方式</div>
+                <div className="font-bold text-white mb-1">🚀 零重力飛行方式</div>
                 <ul className="list-disc list-inside space-y-1 text-slate-400">
-                  <li><strong className="text-slate-200">鍵盤</strong>：方向鍵 或 W, A, S, D 鍵。</li>
-                  <li><strong className="text-slate-200">滑鼠/點擊</strong>：點擊地圖任意處，角色將自動走往目標。</li>
-                  <li><strong className="text-slate-200">觸控搖桿</strong>：可點擊右上角搖桿按鈕開啟虛擬搖桿。</li>
+                  <li><strong className="text-slate-200">鍵盤推進</strong>：方向鍵 或 W, A, S, D 鍵，噴射背包將點火推進。</li>
+                  <li><strong className="text-slate-200">微重力姿態</strong>：人物腳完全懸空漂浮，放開按鍵具備真實微重力慣性滑行。</li>
+                  <li><strong className="text-slate-200">滑鼠/點擊飛行</strong>：點擊星艦艙室或走廊任意處，太空人將自動噴射飛往目標。</li>
+                  <li><strong className="text-slate-200">觸控搖桿</strong>：可點擊右上角搖桿按鈕開啟虛擬噴射搖桿。</li>
                 </ul>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-                <div className="font-bold text-white mb-1">🔍 互動與查看產品</div>
+                <div className="font-bold text-white mb-1">🚪 進入太空艙探索產品</div>
                 <ul className="list-disc list-inside space-y-1 text-slate-400">
-                  <li>走到各大建築展館周邊，按下 <kbd className="px-1.5 py-0.5 rounded bg-slate-800 font-mono text-sky-300">SPACE</kbd> 或 <kbd className="px-1.5 py-0.5 rounded bg-slate-800 font-mono text-sky-300">E</kbd> 鍵。</li>
-                  <li>直接用滑鼠點擊該建築物。</li>
-                  <li>利用右下角「全島雷達」或右上角「產品目錄」一鍵傳送。</li>
+                  <li>飛到各太空艙室周邊，按下 <kbd className="px-1.5 py-0.5 rounded bg-slate-800 font-mono text-sky-300">SPACE</kbd> 或 <kbd className="px-1.5 py-0.5 rounded bg-slate-800 font-mono text-sky-300">E</kbd> 鍵。</li>
+                  <li>直接點擊該太空艙室氣閘門。</li>
+                  <li>利用右下角「星艦全艦雷達」或右上角「產品目錄」一鍵傳送至目標艙室。</li>
                 </ul>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
                 <div className="font-bold text-white mb-1">📖 內容依據</div>
                 <p className="text-slate-400 leading-relaxed">
-                  本展覽島依據《FiXo User Portal Manual v5.4.1.0 繁體》大章節架構規劃，涵蓋 CAM、VPC、FiCo、FiBo、LBS、CIS、KMS、FiWo、BDS、Meter 完整雲端矩陣。
+                  本星艦依據《FiXo User Portal Manual v5.4.1.0 繁體》架構規劃，每個太空艙室皆對應完整原廠產品功能手冊與 Markdown 靜態技術文檔。
                 </p>
               </div>
             </div>
