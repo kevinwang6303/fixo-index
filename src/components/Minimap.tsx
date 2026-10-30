@@ -79,7 +79,7 @@ export const Minimap: React.FC<MinimapProps> = ({
           );
         })}
 
-        {/* Sean player avatar icon marker */}
+        {/* Player avatar indicator marker */}
         <div
           className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none z-20"
           style={{
@@ -88,12 +88,8 @@ export const Minimap: React.FC<MinimapProps> = ({
           }}
         >
           <div className="relative flex items-center justify-center">
-            <div className="w-4 h-4 rounded-full bg-amber-400/30 animate-ping absolute" />
-            <img 
-              src="./sean.png" 
-              alt="Sean" 
-              className="w-5 h-5 object-contain rounded-full border border-amber-300 bg-amber-400/20 shadow-[0_0_8px_#f59e0b]"
-            />
+            <div className="w-4 h-4 rounded-full bg-amber-400/40 animate-ping absolute" />
+            <div className="w-2.5 h-2.5 rounded-full bg-amber-400 border border-white shadow-[0_0_8px_#f59e0b]" />
           </div>
         </div>
       </div>
@@ -101,7 +97,7 @@ export const Minimap: React.FC<MinimapProps> = ({
       <div className="flex items-center justify-between text-[10px] text-slate-400 px-1 font-mono">
         <span className="flex items-center gap-1">
           <MapPin className="w-2.5 h-2.5 text-amber-400" />
-          Sean: {Math.round(playerPos.x)}, {Math.round(playerPos.z)}
+          座標: {Math.round(playerPos.x)}, {Math.round(playerPos.z)}
         </span>
         <span className="text-emerald-400 font-semibold">
           {visitedIds.size}/{products.length} 已發掘

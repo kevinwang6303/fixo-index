@@ -145,19 +145,39 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (activeProduct) return;
-      const key = e.key.toLowerCase();
-      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd', ' '].includes(key)) {
-        keysRef.current[key] = true;
+      const key = (e.key || '').toLowerCase();
+      const code = (e.code || '').toLowerCase();
+
+      if (key === 'w' || code === 'keyw' || key === 'arrowup' || code === 'arrowup') keysRef.current['up'] = true;
+      if (key === 's' || code === 'keys' || key === 'arrowdown' || code === 'arrowdown') keysRef.current['down'] = true;
+      if (key === 'a' || code === 'keya' || key === 'arrowleft' || code === 'arrowleft') keysRef.current['left'] = true;
+      if (key === 'd' || code === 'keyd' || key === 'arrowright' || code === 'arrowright') keysRef.current['right'] = true;
+
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(key) ||
+          ['keyw', 'keys', 'keya', 'keyd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(code)) {
+        // prevent page scrolling
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          e.preventDefault();
+        }
       }
-      if ((e.key === ' ' || key === 'e') && nearbyProduct) {
+
+      if ((e.key === ' ' || code === 'space' || key === 'e' || code === 'keye') && nearbyProduct) {
         e.preventDefault();
         sound.playInteract();
         onOpenProduct(nearbyProduct);
       }
     };
+
     const onKeyUp = (e: KeyboardEvent) => {
-      keysRef.current[e.key.toLowerCase()] = false;
+      const key = (e.key || '').toLowerCase();
+      const code = (e.code || '').toLowerCase();
+
+      if (key === 'w' || code === 'keyw' || key === 'arrowup' || code === 'arrowup') keysRef.current['up'] = false;
+      if (key === 's' || code === 'keys' || key === 'arrowdown' || code === 'arrowdown') keysRef.current['down'] = false;
+      if (key === 'a' || code === 'keya' || key === 'arrowleft' || code === 'arrowleft') keysRef.current['left'] = false;
+      if (key === 'd' || code === 'keyd' || key === 'arrowright' || code === 'arrowright') keysRef.current['right'] = false;
     };
+
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
     return () => {
@@ -476,16 +496,9 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
 
     const isWalkable = (px: number, pz: number): boolean => {
       // 1. Inside any hexagon island
-      for (const [name, center] of islandCenters.entries()) {
+      for (const center of islandCenters.values()) {
         const d = Math.hypot(px - center.x, pz - center.z);
-        if (d <= HEX_R - 0.5) {
-          // Block inside the central building footprint
-          if (name !== 'hub' && d < 2.0) {
-            return false;
-          }
-          if (name === 'hub' && d < 1.7) {
-            return false;
-          }
+        if (d <= HEX_R - 0.2) {
           return true;
         }
       }
@@ -495,7 +508,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
         const posA = islandCenters.get(idA);
         const posB = islandCenters.get(idB);
         if (posA && posB) {
-          if (distToSegment(px, pz, posA.x, posA.z, posB.x, posB.z) <= 0.9) {
+          if (distToSegment(px, pz, posA.x, posA.z, posB.x, posB.z) <= 1.4) {
             return true;
           }
         }
@@ -1031,29 +1044,33 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
     hairCap.position.set(0, 0.05, -0.05);
     headGroup.add(hairCap);
 
-    // SEAN'S FACE DECAL: Mapped from sean-face.png or sean.png onto the 3D head
-    const textureLoader = new THREE.TextureLoader();
-    const faceTex = textureLoader.load('./sean-face.png', undefined, undefined, () => {
-      // Fallback to sean.png if sean-face is not yet cached
-      textureLoader.load('./sean.png', (fallbackTex) => {
-        faceMesh.material = new THREE.MeshBasicMaterial({
-          map: fallbackTex,
-          transparent: true,
-          side: THREE.DoubleSide
-        });
-      });
-    });
-    faceTex.magFilter = THREE.NearestFilter;
+    // Heart Island 3D Chibi Face (Eyes, Blush, Smile)
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x221c1c });
+    const blushMat = new THREE.MeshBasicMaterial({ color: 0xf2a1a1 });
 
-    const faceGeo = new THREE.PlaneGeometry(0.72, 0.68);
-    const faceMat = new THREE.MeshBasicMaterial({
-      map: faceTex,
-      transparent: true,
-      side: THREE.DoubleSide
-    });
-    const faceMesh = new THREE.Mesh(faceGeo, faceMat);
-    faceMesh.position.set(0, 0.02, 0.52);
-    headGroup.add(faceMesh);
+    // Left and Right Eyes
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 8), eyeMat);
+    eyeL.position.set(-0.16, 0.04, 0.49);
+    headGroup.add(eyeL);
+
+    const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 8), eyeMat);
+    eyeR.position.set(0.16, 0.04, 0.49);
+    headGroup.add(eyeR);
+
+    // Cute Cheek Blush
+    const blushL = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), blushMat);
+    blushL.position.set(-0.25, -0.06, 0.45);
+    headGroup.add(blushL);
+
+    const blushR = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), blushMat);
+    blushR.position.set(0.25, -0.06, 0.45);
+    headGroup.add(blushR);
+
+    // Cute Smile
+    const smile = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.018, 6, 12, Math.PI), eyeMat);
+    smile.rotation.x = Math.PI;
+    smile.position.set(0, -0.1, 0.5);
+    headGroup.add(smile);
 
     // Raycasting for clicking buildings (NOT clicking ground to move)
     const raycaster = new THREE.Raycaster();
@@ -1114,10 +1131,10 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       let inputZ = 0;
 
       if (!activeProduct) {
-        if (keys['w'] || keys['arrowup']) inputZ -= 1;
-        if (keys['s'] || keys['arrowdown']) inputZ += 1;
-        if (keys['a'] || keys['arrowleft']) inputX -= 1;
-        if (keys['d'] || keys['arrowright']) inputX += 1;
+        if (keys['up']) inputZ -= 1;
+        if (keys['down']) inputZ += 1;
+        if (keys['left']) inputX -= 1;
+        if (keys['right']) inputX += 1;
 
         if (joystickVector.x !== 0 || joystickVector.y !== 0) {
           inputX = joystickVector.x;
@@ -1142,18 +1159,24 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
           .addScaledVector(camDir, -inputZ)
           .normalize();
 
-        const targetX = p.x + moveDir.x * MOVE_SPEED;
-        const targetZ = p.z + moveDir.z * MOVE_SPEED;
+        let targetX = p.x + moveDir.x * MOVE_SPEED;
+        let targetZ = p.z + moveDir.z * MOVE_SPEED;
+
+        // Fountain soft collision repel (fountain center is at (0, 0))
+        const fountainDist = Math.hypot(targetX, targetZ);
+        if (fountainDist < 1.6) {
+          const pushAngle = Math.atan2(targetZ, targetX);
+          targetX = Math.cos(pushAngle) * 1.6;
+          targetZ = Math.sin(pushAngle) * 1.6;
+        }
 
         // COLLISION DETECTION: Wall-sliding response
         if (isWalkable(targetX, targetZ)) {
           p.x = targetX;
           p.z = targetZ;
         } else if (isWalkable(targetX, p.z)) {
-          // Slide along X
           p.x = targetX;
         } else if (isWalkable(p.x, targetZ)) {
-          // Slide along Z
           p.z = targetZ;
         }
 

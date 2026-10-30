@@ -50,8 +50,8 @@ export default function App() {
   const [timeOfDay, setTimeOfDay] = useState<'day' | 'sunset' | 'night' | 'dawn'>('day');
   const [isBirdEye, setIsBirdEye] = useState(false);
 
-  // Sean's 3D coordinates (Starts at Central Hub (0, 0))
-  const [playerPos, setPlayerPos] = useState({ x: 0, z: 0 });
+  // 3D Player coordinates (Starts on Central Hub promenade at (0, 3.5))
+  const [playerPos, setPlayerPos] = useState({ x: 0, z: 3.5 });
   const [joystickVector, setJoystickVector] = useState({ x: 0, y: 0 });
   const [teleportTarget, setTeleportTarget] = useState<{ x: number; z: number } | null>(null);
 
@@ -112,8 +112,8 @@ export default function App() {
       <header className="absolute top-0 left-0 right-0 p-3 sm:p-4 flex items-center justify-between gap-3 pointer-events-none z-30">
         {/* Brand Logo & Version */}
         <div className="flex items-center gap-3 bg-[#fff8f4]/90 backdrop-blur-md border border-[#c5b5a7]/60 px-4 py-2 rounded-full shadow-lg pointer-events-auto">
-          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-[#db6a41] bg-white flex items-center justify-center shadow-sm">
-            <img src="./sean.png" alt="Sean" className="w-full h-full object-contain" />
+          <div className="w-9 h-9 rounded-full border-2 border-[#db6a41] bg-white flex items-center justify-center text-lg shadow-sm">
+            ☁️
           </div>
           <div>
             <div className="flex items-center gap-1.5">
@@ -125,7 +125,7 @@ export default function App() {
               </span>
             </div>
             <div className="text-[10px] text-[#78716c] font-medium hidden sm:block">
-              Sean's Cloud Architecture Island
+              Foxconn Cloud Platform Interactive Island
             </div>
           </div>
         </div>
@@ -255,8 +255,8 @@ export default function App() {
       {showWelcomeTip && (
         <aside aria-label="操作引導" className="absolute top-20 left-4 z-20 max-w-sm pointer-events-auto">
           <div className="bg-[#fff8f4]/95 backdrop-blur-md border-2 border-[#db6a41]/40 p-3.5 rounded-3xl shadow-2xl flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-[#db6a41] bg-white flex items-center justify-center shadow-sm">
-              <img src="./sean.png" alt="Sean" className="w-full h-full object-contain" />
+            <div className="w-10 h-10 rounded-full shrink-0 border border-[#db6a41] bg-white flex items-center justify-center text-xl shadow-sm">
+              🧭
             </div>
             <div className="flex-1 text-xs">
               <div className="font-bold text-slate-900 mb-0.5 flex items-center gap-1">
@@ -264,7 +264,7 @@ export default function App() {
                 <Sparkles className="w-3.5 h-3.5 text-[#db6a41]" />
               </div>
               <p className="text-slate-600 leading-relaxed">
-                使用鍵盤 <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-300 font-mono text-[#db6a41]">WASD</kbd> 或方向鍵控制 Sean 漫步，滑鼠可自由<strong>按住拖曳旋轉 3D 視角</strong>！內建島嶼與橋樑防掉落碰撞檢測，靠近展館按 <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-300 font-mono text-[#db6a41]">SPACE</kbd> 即可探索！
+                使用鍵盤 <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-300 font-mono text-[#db6a41]">WASD</kbd> 或方向鍵控制小人漫步，滑鼠可自由<strong>按住拖曳旋轉 3D 視角</strong>！內建島嶼與橋樑防掉落碰撞檢測，靠近展館按 <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-300 font-mono text-[#db6a41]">SPACE</kbd> 即可探索！
               </p>
             </div>
             <button
@@ -351,9 +351,11 @@ export default function App() {
 
             <div className="space-y-3 text-xs text-slate-700">
               <div className="p-3.5 rounded-2xl bg-white border border-[#e7ded5] flex items-center gap-3">
-                <img src="./sean.png" alt="Sean" className="w-12 h-12 object-contain bg-[#fff8f4] rounded-2xl border border-[#c5b5a7] p-1" />
+                <div className="w-12 h-12 rounded-2xl bg-[#fff8f4] border border-[#c5b5a7] flex items-center justify-center text-2xl">
+                  🧭
+                </div>
                 <div>
-                  <div className="font-bold text-slate-900 mb-0.5">主角：Sean 探索員</div>
+                  <div className="font-bold text-slate-900 mb-0.5">主角：探索員小人</div>
                   <div className="text-slate-600">在 11 座陽光六角島嶼與拱橋間穿梭，探索 FiXo 雲端全方位架構。</div>
                 </div>
               </div>
@@ -361,9 +363,8 @@ export default function App() {
               <div className="p-3.5 rounded-2xl bg-white border border-[#e7ded5]">
                 <div className="font-bold text-slate-900 mb-1">🎮 操作方式</div>
                 <ul className="list-disc list-inside space-y-1 text-slate-600">
-                  <li><strong className="text-slate-800">點擊島嶼</strong>：滑鼠直接點擊任意六角島嶼或橋樑，Sean 自動走向目標。</li>
-                  <li><strong className="text-slate-800">鍵盤控制</strong>：WASD 或 方向鍵控制走動。</li>
-                  <li><strong className="text-slate-800">視角旋轉</strong>：滑鼠按住右鍵拖曳可自由環繞旋轉 3D 沙盤，滾輪可放大縮小。</li>
+                  <li><strong className="text-slate-800">鍵盤行走</strong>：WASD 或 方向鍵控制走動。</li>
+                  <li><strong className="text-slate-800">滑鼠旋轉視角</strong>：按住左鍵拖曳 360 度環繞旋轉 3D 沙盤，滾輪放大縮小。</li>
                   <li><strong className="text-slate-800">底部快捷島塢</strong>：點選下方任一圖標，鏡頭將平滑滑向該產品展館。</li>
                 </ul>
               </div>
