@@ -127,14 +127,35 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, on
         </div>
 
         {/* Subtitle & Tagline */}
-        <div className="mt-4 mb-5">
-          <p className="text-sm md:text-base font-medium text-slate-300 leading-relaxed">
+        <div className="mt-4 mb-4">
+          <div className="flex items-center gap-2 mb-2 text-xs font-mono font-medium text-sky-400">
+            <span className="px-2 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/30 flex items-center gap-1">
+              📍 3D 展館：{product.building.name} ({product.building.hex.q}, {product.building.hex.r})
+            </span>
+          </div>
+          <p className="text-sm md:text-base font-semibold text-slate-200 leading-relaxed">
             {product.subtitle}
           </p>
           <p className="mt-2 text-xs md:text-sm text-slate-400 leading-relaxed bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
             {product.description}
           </p>
         </div>
+
+        {/* 3D Heart Island Story & Location */}
+        {product.story3D && (
+          <div className="mb-4 p-3.5 rounded-xl bg-sky-950/40 border border-sky-500/30 flex items-start gap-2.5 text-xs text-sky-200">
+            <span className="text-xl shrink-0">🏝️</span>
+            <div>
+              <div className="font-bold text-sky-300 mb-0.5 flex items-center gap-1.5">
+                <span>3D 政策島（Heart Island）場景導覽</span>
+                <span className="px-1.5 py-0.2 rounded text-[10px] bg-sky-500/20 text-sky-300 border border-sky-500/30 font-mono">
+                  高軟亞灣聚落
+                </span>
+              </div>
+              <div className="leading-relaxed text-sky-200/90">{product.story3D}</div>
+            </div>
+          </div>
+        )}
 
         {/* Tab Navigation */}
         <div className="flex items-center gap-2 border-b border-slate-800 mb-5">
@@ -222,6 +243,20 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, on
                   出處：FiXo User Portal Manual v5.4.1.0 繁體中文使用者指南
                 </p>
               </div>
+
+              {product.highlights && product.highlights.length > 0 && (
+                <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30 space-y-2">
+                  <h4 className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    原廠手冊關鍵實戰機制
+                  </h4>
+                  <ul className="text-xs text-amber-200/90 space-y-1.5 list-disc list-inside">
+                    {product.highlights.map((h, i) => (
+                      <li key={i} className="leading-relaxed">{h}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-800 space-y-2">
                 <h4 className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">

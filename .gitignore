@@ -9,7 +9,6 @@ dist-ssr/
 *.tsbuildinfo
 extracted_raw/
 extracted_clean/
-fixo-products/
 
 # Large binaries (> 100MB exceeds GitHub push limits)
 *.pdf

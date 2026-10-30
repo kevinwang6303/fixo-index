@@ -38,4 +38,6 @@ export interface FixoProduct {
   features: ProductFeature[];
   specs: ProductSpec[];
   manualSection: string;
+  story3D?: string;
+  highlights?: string[];
 }
