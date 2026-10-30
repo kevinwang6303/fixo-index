@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FIXO_PRODUCTS } from './data/fixoProducts';
 import { FixoProduct } from './types/product';
-import { ThreeCanvas } from './components/ThreeCanvas';
+import { HeartIsland3D } from './components/HeartIsland3D';
 import { ProductModal } from './components/ProductModal';
 import { Minimap } from './components/Minimap';
 import { QuestTracker } from './components/QuestTracker';
 import { QuickNav } from './components/QuickNav';
+import { HeartDock } from './components/HeartDock';
 import { VirtualJoystick } from './components/VirtualJoystick';
 import { sound } from './utils/audio';
 import { 
@@ -14,9 +15,13 @@ import {
   Menu, 
   HelpCircle, 
   Gamepad2, 
+  Eye,
+  Sun,
+  Sunset,
+  Moon,
+  Sunrise,
   Sparkles,
-  Info,
-  Box
+  Info
 } from 'lucide-react';
 
 const STORAGE_KEY = 'fixo_island_visited_v1';
@@ -41,8 +46,12 @@ export default function App() {
   const [showJoystick, setShowJoystick] = useState(false);
   const [showWelcomeTip, setShowWelcomeTip] = useState(true);
 
-  // 3D Player position state for minimap & HUD (Centered at origin)
-  const [playerPos3D, setPlayerPos3D] = useState({ x: 0, z: 0 });
+  // Heart Island 3D Controls State
+  const [timeOfDay, setTimeOfDay] = useState<'day' | 'sunset' | 'night' | 'dawn'>('day');
+  const [isBirdEye, setIsBirdEye] = useState(false);
+
+  // Sean's 3D coordinates (Starts at Central Hub (0, 0))
+  const [playerPos, setPlayerPos] = useState({ x: 0, z: 0 });
   const [joystickVector, setJoystickVector] = useState({ x: 0, y: 0 });
   const [teleportTarget, setTeleportTarget] = useState<{ x: number; z: number } | null>(null);
 
@@ -69,10 +78,10 @@ export default function App() {
   }, []);
 
   const handleTeleport = (product: FixoProduct) => {
-    // Teleport slightly in front of the 3D pavilion entrance
+    // Fly to that hex island
     setTeleportTarget({
       x: product.building.pos3D.x,
-      z: product.building.pos3D.z + 4.5
+      z: product.building.pos3D.z + 2.8
     });
   };
 
@@ -84,36 +93,39 @@ export default function App() {
   };
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-slate-950 font-sans text-slate-100 select-none">
-      {/* 1. Main 3D WebGL Three.js Scene */}
-      <ThreeCanvas
+    <main className="relative w-screen h-screen overflow-hidden bg-[#9fd8db] font-sans text-slate-800 select-none">
+      {/* 1. Heart Island 3D Three.js Scene */}
+      <HeartIsland3D
         products={FIXO_PRODUCTS}
         activeProduct={activeProduct}
         onOpenProduct={(p) => setActiveProduct(p)}
-        playerPos3D={playerPos3D}
-        setPlayerPos3D={setPlayerPos3D}
+        playerPos={playerPos}
+        setPlayerPos={setPlayerPos}
         joystickVector={joystickVector}
         teleportTarget={teleportTarget}
         clearTeleport={() => setTeleportTarget(null)}
+        timeOfDay={timeOfDay}
+        isBirdEye={isBirdEye}
       />
 
-      {/* 2. Top Header Navigation Bar */}
+      {/* 2. Top Header Navigation Bar (Heart Island Warm Cream & Coral Styling) */}
       <header className="absolute top-0 left-0 right-0 p-3 sm:p-4 flex items-center justify-between gap-3 pointer-events-none z-30">
         {/* Brand Logo & Version */}
-        <div className="flex items-center gap-3 bg-slate-900/85 backdrop-blur-md border border-slate-700/80 px-3.5 py-2 rounded-2xl shadow-xl pointer-events-auto">
-          <div className="relative w-9 h-9 rounded-xl overflow-hidden border border-amber-400/50 bg-gradient-to-tr from-amber-500/20 to-sky-500/20 flex items-center justify-center shadow-md">
+        <div className="flex items-center gap-3 bg-[#fff8f4]/90 backdrop-blur-md border border-[#c5b5a7]/60 px-4 py-2 rounded-full shadow-lg pointer-events-auto">
+          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-[#db6a41] bg-white flex items-center justify-center shadow-sm">
             <img src="./sean.png" alt="Sean" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-sm tracking-wide text-white">FiXo 雲端探索之島</span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
-                <Box className="w-3 h-3" />
-                3D 版
+              <span className="font-extrabold text-sm sm:text-base tracking-wide text-[#211d1d]">
+                FiXo 政策島
+              </span>
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#db6a41] text-white">
+                HEART 3D
               </span>
             </div>
-            <div className="text-[10px] text-slate-400 hidden sm:block">
-              Sean's Foxconn FiXo 3D Interactive Tour
+            <div className="text-[10px] text-[#78716c] font-medium hidden sm:block">
+              Sean's Cloud Architecture Island
             </div>
           </div>
         </div>
@@ -128,11 +140,62 @@ export default function App() {
 
         {/* Right Action Tools */}
         <div className="flex items-center gap-2 pointer-events-auto">
+          {/* Time of Day Buttons */}
+          <div className="hidden lg:flex items-center bg-[#fff8f4]/90 backdrop-blur-md border border-[#c5b5a7]/60 rounded-full p-1 shadow-md gap-0.5">
+            <button
+              type="button"
+              onClick={() => setTimeOfDay('dawn')}
+              title="早晨"
+              className={`p-1.5 rounded-full transition-all cursor-pointer ${timeOfDay === 'dawn' ? 'bg-[#db6a41] text-white' : 'text-slate-600 hover:text-slate-900'}`}
+            >
+              <Sunrise className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimeOfDay('day')}
+              title="白天"
+              className={`p-1.5 rounded-full transition-all cursor-pointer ${timeOfDay === 'day' ? 'bg-[#db6a41] text-white' : 'text-slate-600 hover:text-slate-900'}`}
+            >
+              <Sun className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimeOfDay('sunset')}
+              title="黃昏"
+              className={`p-1.5 rounded-full transition-all cursor-pointer ${timeOfDay === 'sunset' ? 'bg-[#db6a41] text-white' : 'text-slate-600 hover:text-slate-900'}`}
+            >
+              <Sunset className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimeOfDay('night')}
+              title="夜晚"
+              className={`p-1.5 rounded-full transition-all cursor-pointer ${timeOfDay === 'night' ? 'bg-[#db6a41] text-white' : 'text-slate-600 hover:text-slate-900'}`}
+            >
+              <Moon className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Bird's Eye View Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsBirdEye((prev) => !prev)}
+            title={isBirdEye ? '返回 45° 視角' : '切換鳥瞰視角'}
+            className={`flex items-center gap-1 px-3 py-2 rounded-full border shadow-md font-medium text-xs transition-colors cursor-pointer ${
+              isBirdEye 
+                ? 'bg-[#db6a41] text-white border-[#db6a41]' 
+                : 'bg-[#fff8f4]/90 text-slate-700 border-[#c5b5a7]/60 hover:text-[#db6a41]'
+            }`}
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{isBirdEye ? '傾斜視角' : '鳥瞰'}</span>
+          </button>
+
           {/* Quick Nav Button */}
           <button
             type="button"
             onClick={() => setIsQuickNavOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-sky-500/20 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#db6a41] hover:bg-[#c55932] text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
           >
             <Menu className="w-4 h-4" />
             <span className="hidden sm:inline">產品目錄</span>
@@ -143,9 +206,9 @@ export default function App() {
             type="button"
             onClick={toggleSound}
             aria-label={isSoundOn ? '靜音' : '開啟音效'}
-            className="p-2 rounded-xl bg-slate-900/80 backdrop-blur-md border border-slate-700/70 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-2 rounded-full bg-[#fff8f4]/90 backdrop-blur-md border border-[#c5b5a7]/60 text-slate-700 hover:text-[#db6a41] transition-colors cursor-pointer shadow-md"
           >
-            {isSoundOn ? <Volume2 className="w-4 h-4 text-sky-400" /> : <VolumeX className="w-4 h-4 text-slate-500" />}
+            {isSoundOn ? <Volume2 className="w-4 h-4 text-[#db6a41]" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
           </button>
 
           {/* Joystick Toggle */}
@@ -153,10 +216,10 @@ export default function App() {
             type="button"
             onClick={() => setShowJoystick((prev) => !prev)}
             aria-label="虛擬搖桿開關"
-            className={`p-2 rounded-xl backdrop-blur-md border transition-colors cursor-pointer ${
+            className={`p-2 rounded-full backdrop-blur-md border transition-colors cursor-pointer shadow-md ${
               showJoystick
-                ? 'bg-sky-500/20 border-sky-500/50 text-sky-400'
-                : 'bg-slate-900/80 border-slate-700/70 text-slate-400 hover:text-white'
+                ? 'bg-[#db6a41] text-white border-[#db6a41]'
+                : 'bg-[#fff8f4]/90 border-[#c5b5a7]/60 text-slate-700 hover:text-[#db6a41]'
             }`}
           >
             <Gamepad2 className="w-4 h-4" />
@@ -167,14 +230,14 @@ export default function App() {
             type="button"
             onClick={() => setIsHelpOpen(true)}
             aria-label="操作指引"
-            className="p-2 rounded-xl bg-slate-900/80 backdrop-blur-md border border-slate-700/70 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-2 rounded-full bg-[#fff8f4]/90 backdrop-blur-md border border-[#c5b5a7]/60 text-slate-700 hover:text-[#db6a41] transition-colors cursor-pointer shadow-md"
           >
-            <HelpCircle className="w-4 h-4 text-slate-300" />
+            <HelpCircle className="w-4 h-4" />
           </button>
         </div>
       </header>
 
-      {/* Mobile Quest Tracker (Shown below header on mobile) */}
+      {/* Mobile Quest Tracker */}
       <div className="absolute top-16 left-3 right-3 md:hidden pointer-events-auto z-20">
         <QuestTracker
           visitedCount={visitedIds.size}
@@ -182,26 +245,32 @@ export default function App() {
         />
       </div>
 
-      {/* 3. Welcome / Gameplay Tip Banner */}
+      {/* 3. Mascot Pill (Heart Island signature mascot: •ᴗ• Sean · 點一格，開始探索) */}
+      <div className="absolute bottom-20 left-4 z-20 pointer-events-auto hidden sm:flex items-center gap-2 bg-[#fff8f4]/90 backdrop-blur-md border border-[#c5b5a7]/60 px-3.5 py-1.5 rounded-full shadow-lg text-xs font-medium text-slate-700">
+        <span className="text-[#db6a41] font-bold text-sm">•ᴗ•</span>
+        <span>Sean · 點擊六角島嶼或按 WASD 漫步</span>
+      </div>
+
+      {/* 4. Welcome / Gameplay Tip Banner */}
       {showWelcomeTip && (
-        <aside aria-label="操作引導" className="absolute bottom-4 left-4 z-20 max-w-sm pointer-events-auto">
-          <div className="bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3.5 rounded-2xl shadow-2xl flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-amber-400/50 bg-slate-800 flex items-center justify-center">
+        <aside aria-label="操作引導" className="absolute top-20 left-4 z-20 max-w-sm pointer-events-auto">
+          <div className="bg-[#fff8f4]/95 backdrop-blur-md border-2 border-[#db6a41]/40 p-3.5 rounded-3xl shadow-2xl flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-[#db6a41] bg-white flex items-center justify-center shadow-sm">
               <img src="./sean.png" alt="Sean" className="w-full h-full object-contain" />
             </div>
             <div className="flex-1 text-xs">
-              <div className="font-bold text-white mb-0.5 flex items-center gap-1.5">
-                <span>Sean 的 3D 浮空島冒險！</span>
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <div className="font-bold text-slate-900 mb-0.5 flex items-center gap-1">
+                <span>歡迎來到 FiXo 政策島！</span>
+                <Sparkles className="w-3.5 h-3.5 text-[#db6a41]" />
               </div>
-              <p className="text-slate-300 leading-relaxed">
-                操控 Sean 使用 <kbd className="px-1 rounded bg-slate-800 text-sky-400 font-mono">WASD</kbd> 或方向鍵在 3D 島嶼漫遊，亦可<strong className="text-sky-300">點擊 3D 地面</strong>移動。靠近展館按 <kbd className="px-1 rounded bg-slate-800 text-sky-400 font-mono">SPACE</kbd> 查看產品！
+              <p className="text-slate-600 leading-relaxed">
+                完全復刻 <strong>Heart Island</strong> 陽光六角蜂巢群島樣式！使用滑鼠點擊任意島嶼、或按 <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-300 font-mono text-[#db6a41]">WASD</kbd> 控制 Sean 漫步，點擊下方快捷島嶼塢可直接飛往展館！
               </p>
             </div>
             <button
               type="button"
               onClick={() => setShowWelcomeTip(false)}
-              className="text-slate-500 hover:text-slate-300 text-xs px-1 cursor-pointer"
+              className="text-slate-400 hover:text-slate-700 text-xs px-1 cursor-pointer"
             >
               ✕
             </button>
@@ -209,10 +278,19 @@ export default function App() {
         </aside>
       )}
 
-      {/* 4. Bottom Controls */}
+      {/* 5. Bottom Controls: Dock, Joystick, Minimap */}
+      {/* Bottom Dock (Heart Island signature dock) */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+        <HeartDock
+          products={FIXO_PRODUCTS}
+          visitedIds={visitedIds}
+          onSelect={handleTeleport}
+        />
+      </div>
+
       {/* Virtual Joystick (Bottom Left) */}
       {showJoystick && (
-        <div className="absolute bottom-6 left-6 z-30 pointer-events-auto">
+        <div className="absolute bottom-20 left-6 z-30 pointer-events-auto">
           <VirtualJoystick
             onMove={(x, y) => setJoystickVector({ x, y })}
             onStop={() => setJoystickVector({ x: 0, y: 0 })}
@@ -224,20 +302,20 @@ export default function App() {
       <div className="absolute bottom-4 right-4 z-20 pointer-events-auto">
         <Minimap
           products={FIXO_PRODUCTS}
-          playerPos={playerPos3D}
+          playerPos={playerPos}
           visitedIds={visitedIds}
           onTeleport={handleTeleport}
         />
       </div>
 
-      {/* 5. Product Detail Modal */}
+      {/* 6. Product Detail Modal */}
       <ProductModal
         product={activeProduct}
         onClose={() => setActiveProduct(null)}
         onVisited={handleVisited}
       />
 
-      {/* 6. Quick Navigation Drawer / Modal */}
+      {/* 7. Quick Navigation Drawer / Modal */}
       <QuickNav
         products={FIXO_PRODUCTS}
         visitedIds={visitedIds}
@@ -247,54 +325,46 @@ export default function App() {
         onClose={() => setIsQuickNavOpen(false)}
       />
 
-      {/* 7. Help & Controls Modal */}
+      {/* 8. Help & Controls Modal */}
       {isHelpOpen && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
           onClick={() => setIsHelpOpen(false)}
         >
           <div 
-            className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4"
+            className="w-full max-w-md bg-[#fff8f4] border border-[#c5b5a7] rounded-3xl p-6 shadow-2xl space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <Info className="w-4 h-4 text-sky-400" />
-                3D 浮空島操作指南
+            <div className="flex items-center justify-between pb-3 border-b border-[#e7ded5]">
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Info className="w-4 h-4 text-[#db6a41]" />
+                Heart Island 政策島 探索說明
               </h2>
               <button
                 type="button"
                 onClick={() => setIsHelpOpen(false)}
-                className="text-slate-400 hover:text-white cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-3 text-xs text-slate-300">
-              <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center gap-3">
-                <img src="./sean.png" alt="Sean" className="w-12 h-12 object-contain bg-slate-900 rounded-xl border border-slate-700 p-1" />
+            <div className="space-y-3 text-xs text-slate-700">
+              <div className="p-3.5 rounded-2xl bg-white border border-[#e7ded5] flex items-center gap-3">
+                <img src="./sean.png" alt="Sean" className="w-12 h-12 object-contain bg-[#fff8f4] rounded-2xl border border-[#c5b5a7] p-1" />
                 <div>
-                  <div className="font-bold text-white mb-0.5">主角：Sean 探索員</div>
-                  <div className="text-slate-400">穿梭於 FiXo 雲端 10 大核心產品設施，支援 3D 陰影、步態傾斜與自動朝向。</div>
+                  <div className="font-bold text-slate-900 mb-0.5">主角：Sean 探索員</div>
+                  <div className="text-slate-600">在 11 座陽光六角島嶼與拱橋間穿梭，探索 FiXo 雲端全方位架構。</div>
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-                <div className="font-bold text-white mb-1">🎮 3D 移動方式</div>
-                <ul className="list-disc list-inside space-y-1 text-slate-400">
-                  <li><strong className="text-slate-200">鍵盤</strong>：方向鍵 或 W, A, S, D 鍵。</li>
-                  <li><strong className="text-slate-200">滑鼠/點擊</strong>：點擊 3D 地面任意處，Sean 將自動走向目標點。</li>
-                  <li><strong className="text-slate-200">觸控搖桿</strong>：點擊右上角搖桿按鈕開啟虛擬搖桿。</li>
-                </ul>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-                <div className="font-bold text-white mb-1">🔍 互動與查看產品</div>
-                <ul className="list-disc list-inside space-y-1 text-slate-400">
-                  <li>走近 3D 展館光圈，按 <kbd className="px-1.5 py-0.5 rounded bg-slate-800 font-mono text-sky-300">SPACE</kbd> 或 <kbd className="px-1.5 py-0.5 rounded bg-slate-800 font-mono text-sky-300">E</kbd> 鍵。</li>
-                  <li>直接用滑鼠點擊 3D 建築本體。</li>
-                  <li>利用右下角「全島 3D 雷達」或右上角「產品目錄」一鍵傳送。</li>
+              <div className="p-3.5 rounded-2xl bg-white border border-[#e7ded5]">
+                <div className="font-bold text-slate-900 mb-1">🎮 操作方式</div>
+                <ul className="list-disc list-inside space-y-1 text-slate-600">
+                  <li><strong className="text-slate-800">點擊島嶼</strong>：滑鼠直接點擊任意六角島嶼或橋樑，Sean 自動走向目標。</li>
+                  <li><strong className="text-slate-800">鍵盤控制</strong>：WASD 或 方向鍵控制走動。</li>
+                  <li><strong className="text-slate-800">視角旋轉</strong>：滑鼠按住右鍵拖曳可自由環繞旋轉 3D 沙盤，滾輪可放大縮小。</li>
+                  <li><strong className="text-slate-800">底部快捷島塢</strong>：點選下方任一圖標，鏡頭將平滑滑向該產品展館。</li>
                 </ul>
               </div>
             </div>
@@ -302,9 +372,9 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsHelpOpen(false)}
-              className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
+              className="w-full py-2.5 rounded-full bg-[#db6a41] hover:bg-[#c55932] text-white font-bold text-xs transition-colors cursor-pointer shadow-md"
             >
-              開始 3D 探索！
+              開始探索！
             </button>
           </div>
         </div>

@@ -33,6 +33,7 @@ export interface FixoProduct {
     width: number;
     height: number;
     pos3D: { x: number; y: number; z: number }; // 3D World coordinates
+    hex: { q: number; r: number };
   };
   features: ProductFeature[];
   specs: ProductSpec[];
