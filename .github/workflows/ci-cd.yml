@@ -2,9 +2,9 @@ name: CI/CD Pipeline & GitHub Pages Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, 3d-version]
   pull_request:
-    branches: [main]
+    branches: [main, 3d-version]
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -40,7 +40,7 @@ jobs:
         run: npm run build
 
       - name: Upload artifact for GitHub Pages
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/3d-version'
         uses: actions/upload-pages-artifact@v3
         with:
           path: './dist'
@@ -48,7 +48,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages (CD)
     needs: build
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/3d-version'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
