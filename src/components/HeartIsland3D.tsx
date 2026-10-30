@@ -19,8 +19,8 @@ interface HeartIsland3DProps {
 
 const HEX_R = 8.2;
 const SQ3 = Math.sqrt(3);
-const INTERACTION_DIST = 4.8;
-const MOVE_SPEED = 0.28;
+const INTERACTION_DIST = 4.6;
+const MOVE_SPEED = 0.24;
 
 // Convert axial hex coordinates (q, r) to 3D world (x, z)
 export const hexToWorld = (q: number, r: number, radius = HEX_R) => {
@@ -43,7 +43,6 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const keysRef = useRef<{ [key: string]: boolean }>({});
-  const clickTargetRef = useRef<THREE.Vector3 | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const envRef = useRef<{
@@ -59,8 +58,9 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
   const playerStateRef = useRef({
     x: playerPos.x,
     z: playerPos.z,
+    rotationY: 0,
+    targetRotationY: 0,
     isMoving: false,
-    facingLeft: false,
     walkTimer: 0,
     stepTimer: 0
   });
@@ -70,7 +70,6 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
     if (teleportTarget) {
       playerStateRef.current.x = teleportTarget.x;
       playerStateRef.current.z = teleportTarget.z;
-      clickTargetRef.current = null;
       setPlayerPos({ x: teleportTarget.x, z: teleportTarget.z });
       sound.playTeleport();
 
@@ -194,13 +193,13 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
     renderer.toneMappingExposure = 1.05;
     container.appendChild(renderer.domElement);
 
-    // Orbit Controls with damping
+    // Orbit Controls (Mouse rotates view, pans, zooms!)
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.maxPolarAngle = Math.PI / 2 - 0.05; // Prevent camera sinking under water
     controls.minDistance = 12;
-    controls.maxDistance = 110;
+    controls.maxDistance = 120;
     controls.target.set(0, 1.2, 0);
     controlsRef.current = controls;
 
@@ -229,7 +228,6 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
     scene.add(fillLight);
 
     // 3. Sky Dome & Sparkling Pastel Water Plane
-    // Sky Dome
     const skyGeo = new THREE.SphereGeometry(220, 32, 16);
     const skyMat = new THREE.ShaderMaterial({
       side: THREE.BackSide,
@@ -310,7 +308,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
     const islandsGroup = new THREE.Group();
     scene.add(islandsGroup);
 
-    // Island Ground Style Tones
+    // Island Ground Style Tones (Heart Island Palette)
     const GROUND_COLORS: Record<string, number> = {
       hub: 0xf4f1ec, // Central Granite Plaza
       cam: 0xdcb79a, // Warm Terracotta Sandstone
@@ -333,7 +331,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       const g = new THREE.Group();
       g.position.set(x, 0, z);
 
-      // A. Top Beveled Hexagon Ground Surface (y = 0.2)
+      // Top Beveled Hexagon Ground Surface (y = 0.35)
       const topPlateGeo = new THREE.CylinderGeometry(HEX_R - 0.2, HEX_R, 0.55, 6);
       const topPlateMat = new THREE.MeshStandardMaterial({
         color: groundColor,
@@ -345,7 +343,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       topPlate.receiveShadow = true;
       g.add(topPlate);
 
-      // B. Sandstone Cliff Strata Underneath (Tapers into water)
+      // Sandstone Cliff Strata Underneath (Tapers into water)
       const cliffGeo = new THREE.CylinderGeometry(HEX_R, HEX_R * 0.78, 3.2, 6);
       const cliffMat = new THREE.MeshStandardMaterial({
         color: 0xc7b08f,
@@ -358,7 +356,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       cliff.receiveShadow = true;
       g.add(cliff);
 
-      // C. Shallow Water Lagoon Shelf Contour
+      // Shallow Water Lagoon Shelf Contour
       const lagoonGeo = new THREE.CylinderGeometry(HEX_R * 1.15, HEX_R * 1.15, 0.12, 6);
       const lagoonMat = new THREE.MeshBasicMaterial({
         color: 0xa4d4da,
@@ -369,7 +367,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       lagoon.position.y = -0.15;
       g.add(lagoon);
 
-      // D. Inner Walking Ring Tile Promenade (Heart Island signature promenade)
+      // Inner Walking Ring Tile Promenade
       const ringGeo = new THREE.RingGeometry(HEX_R * 0.68, HEX_R * 0.85, 32);
       const ringMat = new THREE.MeshStandardMaterial({
         color: 0xf4f1ec,
@@ -396,7 +394,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       buildHexIsland(prod.id, q, r, gColor, prod.name);
     });
 
-    // 6. Build Connecting Bridges Between Adjacent Hex Islands
+    // 6. Connecting Bridges & Collision Path Definition
     const bridgeDeckMat = new THREE.MeshStandardMaterial({ color: 0xb48560, roughness: 0.7 });
     const bridgeRailingMat = new THREE.MeshStandardMaterial({ color: 0xfff8f4, roughness: 0.4 });
 
@@ -431,31 +429,31 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       const midX = (posA.x + posB.x) / 2;
       const midZ = (posA.z + posB.z) / 2;
       const dist = Math.hypot(posB.x - posA.x, posB.z - posA.z);
-      const bridgeLen = dist * 0.38;
+      const bridgeLen = dist * 0.44;
 
       const bridgeGroup = new THREE.Group();
       bridgeGroup.position.set(midX, 0.65, midZ);
       bridgeGroup.lookAt(posB.x, 0.65, posB.z);
 
       // Deck
-      const deckGeo = new THREE.BoxGeometry(1.5, 0.15, bridgeLen);
+      const deckGeo = new THREE.BoxGeometry(1.8, 0.16, bridgeLen);
       const deck = new THREE.Mesh(deckGeo, bridgeDeckMat);
       deck.castShadow = true;
       deck.receiveShadow = true;
       bridgeGroup.add(deck);
 
       // Left & Right Railings with white posts
-      for (const side of [-0.75, 0.75]) {
+      for (const side of [-0.9, 0.9]) {
         const railGeo = new THREE.BoxGeometry(0.08, 0.08, bridgeLen);
         const rail = new THREE.Mesh(railGeo, bridgeRailingMat);
-        rail.position.set(side, 0.4, 0);
+        rail.position.set(side, 0.42, 0);
         rail.castShadow = true;
         bridgeGroup.add(rail);
 
         for (let p = -1; p <= 1; p++) {
-          const postGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.45, 8);
+          const postGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.45, 8);
           const post = new THREE.Mesh(postGeo, bridgeRailingMat);
-          post.position.set(side, 0.22, (p * bridgeLen) / 2.4);
+          post.position.set(side, 0.22, (p * bridgeLen) / 2.3);
           post.castShadow = true;
           bridgeGroup.add(post);
         }
@@ -464,11 +462,52 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       islandsGroup.add(bridgeGroup);
     });
 
-    // 7. Low-Poly Handcrafted Scenery: Trees, Benches, Street Lamps
+    // COLLISION TEST FUNCTION: keeps Sean on the islands and bridges!
+    const distToSegment = (px: number, pz: number, ax: number, az: number, bx: number, bz: number) => {
+      const dx = bx - ax;
+      const dz = bz - az;
+      const l2 = dx * dx + dz * dz;
+      if (l2 === 0) return Math.hypot(px - ax, pz - az);
+      const t = Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / l2));
+      const projX = ax + t * dx;
+      const projZ = az + t * dz;
+      return Math.hypot(px - projX, pz - projZ);
+    };
+
+    const isWalkable = (px: number, pz: number): boolean => {
+      // 1. Inside any hexagon island
+      for (const [name, center] of islandCenters.entries()) {
+        const d = Math.hypot(px - center.x, pz - center.z);
+        if (d <= HEX_R - 0.5) {
+          // Block inside the central building footprint
+          if (name !== 'hub' && d < 2.0) {
+            return false;
+          }
+          if (name === 'hub' && d < 1.7) {
+            return false;
+          }
+          return true;
+        }
+      }
+
+      // 2. On any bridge
+      for (const [idA, idB] of adjacentPairs) {
+        const posA = islandCenters.get(idA);
+        const posB = islandCenters.get(idB);
+        if (posA && posB) {
+          if (distToSegment(px, pz, posA.x, posA.z, posB.x, posB.z) <= 0.9) {
+            return true;
+          }
+        }
+      }
+
+      return false; // Open water
+    };
+
+    // 7. Low-Poly Scenery: Trees, Benches, Street Lamps
     const decorGroup = new THREE.Group();
     scene.add(decorGroup);
 
-    // Tree creation helpers
     const treeTrunkMat = new THREE.MeshStandardMaterial({ color: 0x8a6a4e, roughness: 0.8 });
     const leafMats = [
       new THREE.MeshStandardMaterial({ color: 0x9cc27a, roughness: 0.7, flatShading: true }),
@@ -540,25 +579,23 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       decorGroup.add(g);
     };
 
-    // Scatter trees & lamps across the islands
     islandCenters.forEach((pos, key) => {
       if (key === 'hub') {
-        addRoundTree(pos.x - 3.8, 0.65, pos.z - 3.6, 0.9);
-        addRoundTree(pos.x + 3.8, 0.65, pos.z - 3.6, 0.9);
-        addPineTree(pos.x - 4.2, 0.65, pos.z + 3.4, 0.95);
-        addPineTree(pos.x + 4.2, 0.65, pos.z + 3.4, 0.95);
-        addStreetLamp(pos.x - 2.8, 0.65, pos.z);
-        addStreetLamp(pos.x + 2.8, 0.65, pos.z);
+        addRoundTree(pos.x - 4.5, 0.65, pos.z - 4.2, 0.9);
+        addRoundTree(pos.x + 4.5, 0.65, pos.z - 4.2, 0.9);
+        addPineTree(pos.x - 4.8, 0.65, pos.z + 4.0, 0.95);
+        addPineTree(pos.x + 4.8, 0.65, pos.z + 4.0, 0.95);
+        addStreetLamp(pos.x - 3.2, 0.65, pos.z);
+        addStreetLamp(pos.x + 3.2, 0.65, pos.z);
       } else {
-        // Scatter around outer perimeter
-        addRoundTree(pos.x - 4.2, 0.65, pos.z - 3.2, 0.85);
-        addPineTree(pos.x + 4.4, 0.65, pos.z - 2.8, 0.9);
-        addRoundTree(pos.x + 3.5, 0.65, pos.z + 3.8, 0.8);
-        addStreetLamp(pos.x, 0.65, pos.z + 4.5);
+        addRoundTree(pos.x - 4.8, 0.65, pos.z - 3.6, 0.85);
+        addPineTree(pos.x + 5.0, 0.65, pos.z - 3.2, 0.9);
+        addRoundTree(pos.x + 4.2, 0.65, pos.z + 4.4, 0.8);
+        addStreetLamp(pos.x, 0.65, pos.z + 5.2);
       }
     });
 
-    // 8. Build Central Hub Monument: Grand Fountain & Holographic FiXo Crest
+    // 8. Central Hub Fountain & Monument
     const fountainGroup = new THREE.Group();
     fountainGroup.position.set(0, 0.65, 0);
 
@@ -584,7 +621,6 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
     centerPillar.castShadow = true;
     fountainGroup.add(centerPillar);
 
-    // Rotating FiXo Crest Cube at Fountain
     const crestCube = new THREE.Mesh(
       new THREE.BoxGeometry(1.2, 1.2, 1.2),
       new THREE.MeshStandardMaterial({
@@ -599,17 +635,15 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
     fountainGroup.add(crestCube);
     scene.add(fountainGroup);
 
-    // 9. Build 10 Distinct Low-Poly Miniature Architectural Pavilions
+    // 9. HIGH-DETAIL 3D MINIATURE ARCHITECTURAL PAVILIONS
     const buildingMeshes: { product: FixoProduct; group: THREE.Group; beacon: THREE.Mesh }[] = [];
 
-    // Helper: create cute floating pill label
     const createPillSprite = (text: string, iconSymbol: string, colorHex: string) => {
       const canvas = document.createElement('canvas');
       canvas.width = 380;
       canvas.height = 120;
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        // Pill background (Heart Island Cream Pill)
         ctx.fillStyle = 'rgba(255, 248, 244, 0.94)';
         ctx.strokeStyle = colorHex;
         ctx.lineWidth = 4;
@@ -644,11 +678,12 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
 
       const colorInt = parseInt(prod.color.primary.replace('#', '0x'), 16);
 
-      // Building Wall & Roof Materials (Heart Island Warm Palette)
-      const wallMat = new THREE.MeshStandardMaterial({ color: 0xfff8f4, roughness: 0.5 });
-      const roofMat = new THREE.MeshStandardMaterial({ color: colorInt, roughness: 0.4 });
-      const woodTrimMat = new THREE.MeshStandardMaterial({ color: 0x8a6a4e, roughness: 0.6 });
-      const windowMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.4 });
+      // Shared Materials
+      const wallMat = new THREE.MeshStandardMaterial({ color: 0xfff8f4, roughness: 0.45 });
+      const roofMat = new THREE.MeshStandardMaterial({ color: colorInt, roughness: 0.35 });
+      const trimMat = new THREE.MeshStandardMaterial({ color: 0x8a6a4e, roughness: 0.6 });
+      const metalMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8, roughness: 0.2 });
+      const glassMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.35 });
 
       // Ground Interactive Ring Beacon
       const ringGeo = new THREE.RingGeometry(3.6, 4.2, 24);
@@ -663,188 +698,379 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       beacon.position.y = 0.05;
       bGroup.add(beacon);
 
-      // Procedural Miniature Low-Poly Architecture per product
+      // Procedural High-Detail Architecture
       if (prod.id === 'cam') {
-        // CAM Citadel: Town hall with clock pediment & columns
-        const base = new THREE.Mesh(new THREE.BoxGeometry(4.2, 3.2, 3.6), wallMat);
-        base.position.y = 1.6;
-        base.castShadow = true;
-        bGroup.add(base);
+        // CAM: Grand Neoclassical Townhall with Columns & Golden Clock Pediment
+        const steps = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.3, 4.4), wallMat);
+        steps.position.y = 0.15;
+        bGroup.add(steps);
 
-        const pediment = new THREE.Mesh(new THREE.ConeGeometry(3.2, 1.6, 4), roofMat);
-        pediment.rotation.y = Math.PI / 4;
-        pediment.position.y = 3.9;
-        pediment.castShadow = true;
-        bGroup.add(pediment);
-      } else if (prod.id === 'vpc') {
-        // VPC Network Station: Twin antenna towers & data hub
-        const base = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.6, 3.2), wallMat);
-        base.position.y = 1.3;
-        base.castShadow = true;
-        bGroup.add(base);
+        const body = new THREE.Mesh(new THREE.BoxGeometry(4.2, 3.2, 3.6), wallMat);
+        body.position.y = 1.9;
+        body.castShadow = true;
+        bGroup.add(body);
 
-        for (const side of [-1.4, 1.4]) {
-          const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.16, 4.2, 8), woodTrimMat);
-          mast.position.set(side, 3.4, 0);
-          mast.castShadow = true;
-          bGroup.add(mast);
+        // Columns in front
+        for (const cx of [-1.5, -0.5, 0.5, 1.5]) {
+          const col = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 3.2, 12), wallMat);
+          col.position.set(cx, 1.9, 2.0);
+          col.castShadow = true;
+          bGroup.add(col);
         }
-      } else if (prod.id === 'fico') {
-        // FiCo Supercomputing Center: Dual gabled high-tech center
-        const base = new THREE.Mesh(new THREE.BoxGeometry(4.6, 4.2, 3.4), wallMat);
-        base.position.y = 2.1;
-        base.castShadow = true;
-        bGroup.add(base);
 
-        const roof = new THREE.Mesh(new THREE.ConeGeometry(3.5, 2.2, 4), roofMat);
+        // Roof Pediment
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(3.4, 1.8, 4), roofMat);
         roof.rotation.y = Math.PI / 4;
-        roof.position.y = 5.2;
+        roof.position.y = 4.4;
         roof.castShadow = true;
         bGroup.add(roof);
-      } else if (prod.id === 'fibo') {
-        // FiBo Storage Port: Warehouse with storage bay
-        const warehouse = new THREE.Mesh(new THREE.BoxGeometry(4.4, 2.8, 3.6), wallMat);
-        warehouse.position.y = 1.4;
-        warehouse.castShadow = true;
-        bGroup.add(warehouse);
 
-        const roof = new THREE.Mesh(new THREE.ConeGeometry(3.3, 1.5, 4), roofMat);
-        roof.rotation.y = Math.PI / 4;
-        roof.position.y = 3.5;
-        roof.castShadow = true;
-        bGroup.add(roof);
-      } else if (prod.id === 'lbs') {
-        // LBS Lighthouse: Striped maritime lighthouse
-        const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.6, 6.2, 12), wallMat);
-        tower.position.y = 3.1;
-        tower.castShadow = true;
-        bGroup.add(tower);
-
-        const lampRoom = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 1.2, 12), windowMat);
-        lampRoom.position.y = 6.4;
-        lampRoom.castShadow = true;
-        bGroup.add(lampRoom);
-
-        const roof = new THREE.Mesh(new THREE.ConeGeometry(1.4, 1.4, 12), roofMat);
-        roof.position.y = 7.6;
-        roof.castShadow = true;
-        bGroup.add(roof);
-      } else if (prod.id === 'cis') {
-        // CIS Harbor Dock: Modular container terminal
-        const c1 = new THREE.Mesh(new THREE.BoxGeometry(3.8, 1.6, 2.2), roofMat);
-        c1.position.set(0, 0.8, 0);
-        c1.castShadow = true;
-        bGroup.add(c1);
-
-        const c2 = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.4, 1.8), wallMat);
-        c2.position.set(0, 2.2, 0);
-        c2.castShadow = true;
-        bGroup.add(c2);
-      } else if (prod.id === 'kms') {
-        // KMS Vault: Fortified stone fortress with heavy archway
-        const vault = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.8, 3.4, 6), wallMat);
-        vault.position.y = 1.7;
-        vault.castShadow = true;
-        bGroup.add(vault);
-
-        const lockWheel = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.2, 8, 16), roofMat);
-        lockWheel.position.set(0, 1.8, 2.4);
-        bGroup.add(lockWheel);
-      } else if (prod.id === 'fiwo') {
-        // FiWo Modern Workspace Studio: Glass pavilion
-        const studio = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.8, 3.4), wallMat);
-        studio.position.y = 1.4;
-        studio.castShadow = true;
-        bGroup.add(studio);
-
-        const glassFront = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.0, 0.1), windowMat);
-        glassFront.position.set(0, 1.4, 1.72);
-        bGroup.add(glassFront);
-      } else if (prod.id === 'bds') {
-        // BDS Observatory: Astronomical dome
-        const base = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.5, 2.2, 16), wallMat);
+        // Clock tower dome
+        const dome = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), trimMat);
+        dome.position.y = 5.2;
+        dome.castShadow = true;
+        bGroup.add(dome);
+      } else if (prod.id === 'vpc') {
+        // VPC: High-Tech Relay Station with Lattice Towers & Conduits
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.8, 2.2, 6), wallMat);
         base.position.y = 1.1;
         base.castShadow = true;
         bGroup.add(base);
 
-        const dome = new THREE.Mesh(new THREE.SphereGeometry(2.2, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), roofMat);
-        dome.position.y = 2.2;
-        dome.castShadow = true;
-        bGroup.add(dome);
-      } else {
-        // Meter Telemetry Station: Wind turbine tower
-        const base = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.4, 3.2), wallMat);
-        base.position.y = 1.2;
+        const roof = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.6, 0.6, 6), roofMat);
+        roof.position.y = 2.5;
+        bGroup.add(roof);
+
+        // Lattice towers
+        for (const tx of [-1.4, 1.4]) {
+          const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.22, 4.8, 8), metalMat);
+          mast.position.set(tx, 3.8, 0);
+          mast.castShadow = true;
+          bGroup.add(mast);
+
+          const tipLight = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), glassMat);
+          tipLight.position.set(tx, 6.2, 0);
+          bGroup.add(tipLight);
+        }
+      } else if (prod.id === 'fico') {
+        // FiCo: Twin Server Skyscrapers with Skybridge & Penthouse Roofs
+        const t1 = new THREE.Mesh(new THREE.BoxGeometry(1.6, 5.6, 2.4), wallMat);
+        t1.position.set(-1.2, 2.8, 0);
+        t1.castShadow = true;
+        bGroup.add(t1);
+
+        const t2 = new THREE.Mesh(new THREE.BoxGeometry(1.6, 5.6, 2.4), wallMat);
+        t2.position.set(1.2, 2.8, 0);
+        t2.castShadow = true;
+        bGroup.add(t2);
+
+        // Skybridge
+        const bridge = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.8, 1.2), glassMat);
+        bridge.position.set(0, 4.2, 0);
+        bGroup.add(bridge);
+
+        // Server Penthouse Roofs
+        for (const rx of [-1.2, 1.2]) {
+          const r = new THREE.Mesh(new THREE.ConeGeometry(1.2, 1.4, 4), roofMat);
+          r.rotation.y = Math.PI / 4;
+          r.position.set(rx, 6.3, 0);
+          r.castShadow = true;
+          bGroup.add(r);
+        }
+      } else if (prod.id === 'fibo') {
+        // FiBo: Maritime Storage Depot with Gantry Crane & Cylindrical Silos
+        const depot = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.6, 3.2), wallMat);
+        depot.position.y = 1.3;
+        depot.castShadow = true;
+        bGroup.add(depot);
+
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(3.2, 1.4, 4), roofMat);
+        roof.rotation.y = Math.PI / 4;
+        roof.position.y = 3.3;
+        bGroup.add(roof);
+
+        // Silos
+        for (const [sx, sz] of [[1.8, 1.4], [1.8, -1.4]]) {
+          const silo = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 3.6, 16), metalMat);
+          silo.position.set(sx, 1.8, sz);
+          silo.castShadow = true;
+          bGroup.add(silo);
+        }
+      } else if (prod.id === 'lbs') {
+        // LBS: Striped Seaside Lighthouse with Rotating Spotlight
+        const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.6, 6.4, 16), wallMat);
+        tower.position.y = 3.2;
+        tower.castShadow = true;
+        bGroup.add(tower);
+
+        // Red stripes
+        for (const sy of [2.0, 4.2]) {
+          const stripe = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.4, 0.9, 16), roofMat);
+          stripe.position.y = sy;
+          bGroup.add(stripe);
+        }
+
+        const gallery = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.2, 16), metalMat);
+        gallery.position.y = 6.5;
+        bGroup.add(gallery);
+
+        const lantern = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 1.2, 16), glassMat);
+        lantern.position.y = 7.2;
+        bGroup.add(lantern);
+
+        const cap = new THREE.Mesh(new THREE.ConeGeometry(1.3, 1.2, 16), roofMat);
+        cap.position.y = 8.3;
+        bGroup.add(cap);
+      } else if (prod.id === 'cis') {
+        // CIS: Container Port Terminal with Stacked Shipping Containers
+        const terminal = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.2, 2.4), wallMat);
+        terminal.position.set(-0.6, 1.1, 0);
+        terminal.castShadow = true;
+        bGroup.add(terminal);
+
+        // Containers
+        const c1 = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.2, 1.6), roofMat);
+        c1.position.set(0.6, 0.6, 1.2);
+        c1.castShadow = true;
+        bGroup.add(c1);
+
+        const c2 = new THREE.Mesh(new THREE.BoxGeometry(3.0, 1.2, 1.5), trimMat);
+        c2.position.set(0.5, 1.8, 1.2);
+        c2.castShadow = true;
+        bGroup.add(c2);
+      } else if (prod.id === 'kms') {
+        // KMS: Granite Bunker Vault with Heavy Circular Steel Vault Door
+        const bunker = new THREE.Mesh(new THREE.BoxGeometry(4.4, 3.2, 4.2), wallMat);
+        bunker.position.y = 1.6;
+        bunker.castShadow = true;
+        bGroup.add(bunker);
+
+        const battlement = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.6, 4.4), roofMat);
+        battlement.position.y = 3.4;
+        bGroup.add(battlement);
+
+        // Bank Vault Door
+        const doorFrame = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, 0.3, 24), metalMat);
+        doorFrame.rotation.x = Math.PI / 2;
+        doorFrame.position.set(0, 1.7, 2.15);
+        bGroup.add(doorFrame);
+
+        const spoke = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.15, 8, 16), roofMat);
+        spoke.position.set(0, 1.7, 2.3);
+        bGroup.add(spoke);
+      } else if (prod.id === 'fiwo') {
+        // FiWo: Cantilevered Modern Glass Studio with Rooftop Terrace
+        const base = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.6, 3.4), wallMat);
+        base.position.y = 1.3;
         base.castShadow = true;
         bGroup.add(base);
 
-        const turbineMast = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 4.2, 8), woodTrimMat);
-        turbineMast.position.set(0, 4.2, 0);
-        turbineMast.castShadow = true;
-        bGroup.add(turbineMast);
+        const glassWall = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.0, 0.1), glassMat);
+        glassWall.position.set(0, 1.3, 1.72);
+        bGroup.add(glassWall);
+
+        const roofCanopy = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.3, 3.8), roofMat);
+        roofCanopy.position.y = 2.75;
+        bGroup.add(roofCanopy);
+      } else if (prod.id === 'bds') {
+        // BDS: Astronomical Observatory Dome & Giant Tilted Radar Dish
+        const drum = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.6, 2.4, 16), wallMat);
+        drum.position.y = 1.2;
+        drum.castShadow = true;
+        bGroup.add(drum);
+
+        const dome = new THREE.Mesh(new THREE.SphereGeometry(2.3, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), roofMat);
+        dome.position.y = 2.4;
+        dome.castShadow = true;
+        bGroup.add(dome);
+
+        // Tilted dish antenna
+        const dish = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 0.2, 0.6, 16), metalMat);
+        dish.position.set(1.4, 4.5, 0);
+        dish.rotation.z = Math.PI / 4;
+        bGroup.add(dish);
+      } else {
+        // Meter: Eco-Station with Rotating Wind Turbine & Power Battery
+        const station = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.4, 3.2), wallMat);
+        station.position.y = 1.2;
+        station.castShadow = true;
+        bGroup.add(station);
+
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(2.8, 1.2, 4), roofMat);
+        roof.rotation.y = Math.PI / 4;
+        roof.position.y = 3.0;
+        bGroup.add(roof);
+
+        // Wind Turbine
+        const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.22, 5.2, 8), metalMat);
+        mast.position.set(0, 4.6, 0);
+        mast.castShadow = true;
+        bGroup.add(mast);
+
+        const turbineHub = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 8), roofMat);
+        turbineHub.position.set(0, 7.2, 0.2);
+        turbineHub.name = 'turbine_hub';
+        bGroup.add(turbineHub);
       }
 
-      // Cute Floating Title Pill above building
+      // Floating Title Pill Badge
       const pillSprite = createPillSprite(prod.name, prod.building.symbol, prod.color.primary);
-      pillSprite.position.set(0, 6.8, 0);
+      pillSprite.position.set(0, 7.2, 0);
       bGroup.add(pillSprite);
 
       buildingMeshes.push({ product: prod, group: bGroup, beacon });
     });
 
-    // 10. Sean Character Avatar (Using sean.png)
-    const textureLoader = new THREE.TextureLoader();
-    const seanTexture = textureLoader.load('./sean.png');
-    seanTexture.magFilter = THREE.NearestFilter;
-    seanTexture.minFilter = THREE.LinearMipMapLinearFilter;
-
-    const seanHeight = 2.6;
-    const seanWidth = 2.18;
-    const seanGeo = new THREE.PlaneGeometry(seanWidth, seanHeight);
-    const seanMat = new THREE.MeshStandardMaterial({
-      map: seanTexture,
-      transparent: true,
-      alphaTest: 0.1,
-      roughness: 0.3,
-      side: THREE.DoubleSide
-    });
-    const playerMesh = new THREE.Mesh(seanGeo, seanMat);
-    playerMesh.position.set(playerStateRef.current.x, 0.65 + seanHeight / 2, playerStateRef.current.z);
-    playerMesh.castShadow = true;
-    scene.add(playerMesh);
+    // 10. REAL 3D CHIBI SEAN AVATAR (Puma/Heart Island Procedural Chibi Model with Sean's Face)
+    const characterGroup = new THREE.Group();
+    characterGroup.position.set(playerStateRef.current.x, 0.65, playerStateRef.current.z);
+    scene.add(characterGroup);
 
     // Dynamic Soft Circular Drop Shadow
-    const shadowGeo = new THREE.CircleGeometry(0.95, 20);
+    const shadowGeo = new THREE.CircleGeometry(0.85, 20);
     const shadowMat = new THREE.MeshBasicMaterial({
-      color: 0x292524,
+      color: 0x2a2018,
       transparent: true,
-      opacity: 0.35
+      opacity: 0.28
     });
     const playerShadow = new THREE.Mesh(shadowGeo, shadowMat);
     playerShadow.rotation.x = -Math.PI / 2;
-    playerShadow.position.y = 0.67;
-    scene.add(playerShadow);
+    playerShadow.position.y = 0.02;
+    characterGroup.add(playerShadow);
 
-    // Click Destination Ripple Target
-    const targetRingGeo = new THREE.RingGeometry(0.6, 0.9, 24);
-    const targetRingMat = new THREE.MeshBasicMaterial({
-      color: 0xdb6a41, // Heart Island Coral
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.9
+    // Character Mesh Materials
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xf3cfae, roughness: 0.7 });
+    const hairMat = new THREE.MeshStandardMaterial({ color: 0x2e2522, roughness: 0.8 });
+    const shirtMat = new THREE.MeshStandardMaterial({ color: 0xdb6a41, roughness: 0.6 }); // Heart Island Coral Polo
+    const pantsMat = new THREE.MeshStandardMaterial({ color: 0x3b3a42, roughness: 0.7 }); // Navy trousers
+    const shoeMat = new THREE.MeshStandardMaterial({ color: 0xf6f4ef, roughness: 0.4 }); // White trainers
+
+    // A. Left & Right Legs
+    const legL = new THREE.Group();
+    legL.position.set(-0.24, 0.65, 0);
+    characterGroup.add(legL);
+
+    const legLMesh = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.6, 0.26), pantsMat);
+    legLMesh.position.y = -0.3;
+    legLMesh.castShadow = true;
+    legL.add(legLMesh);
+
+    const shoeLMesh = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.18, 0.42), shoeMat);
+    shoeLMesh.position.set(0, -0.55, 0.07);
+    shoeLMesh.castShadow = true;
+    legL.add(shoeLMesh);
+
+    const legR = new THREE.Group();
+    legR.position.set(0.24, 0.65, 0);
+    characterGroup.add(legR);
+
+    const legRMesh = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.6, 0.26), pantsMat);
+    legRMesh.position.y = -0.3;
+    legRMesh.castShadow = true;
+    legR.add(legRMesh);
+
+    const shoeRMesh = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.18, 0.42), shoeMat);
+    shoeRMesh.position.set(0, -0.55, 0.07);
+    shoeRMesh.castShadow = true;
+    legR.add(shoeRMesh);
+
+    // B. Upper Body (Hips, Torso, Arms, Head)
+    const upperBody = new THREE.Group();
+    upperBody.position.y = 0.65;
+    characterGroup.add(upperBody);
+
+    // Torso / Shirt
+    const torsoMesh = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.75, 0.44), shirtMat);
+    torsoMesh.position.y = 0.38;
+    torsoMesh.castShadow = true;
+    upperBody.add(torsoMesh);
+
+    // Left & Right Arms
+    const armL = new THREE.Group();
+    armL.position.set(-0.45, 0.68, 0);
+    upperBody.add(armL);
+
+    const armLMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.55, 0.2), shirtMat);
+    armLMesh.position.y = -0.25;
+    armLMesh.castShadow = true;
+    armL.add(armLMesh);
+
+    const handL = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), skinMat);
+    handL.position.y = -0.55;
+    armL.add(handL);
+
+    const armR = new THREE.Group();
+    armR.position.set(0.45, 0.68, 0);
+    upperBody.add(armR);
+
+    const armRMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.55, 0.2), shirtMat);
+    armRMesh.position.y = -0.25;
+    armRMesh.castShadow = true;
+    armR.add(armRMesh);
+
+    const handR = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), skinMat);
+    handR.position.y = -0.55;
+    armR.add(handR);
+
+    // Head Group
+    const headGroup = new THREE.Group();
+    headGroup.position.set(0, 1.25, 0);
+    upperBody.add(headGroup);
+
+    // Head Base
+    const headBase = new THREE.Mesh(new THREE.SphereGeometry(0.52, 16, 14), skinMat);
+    headBase.castShadow = true;
+    headGroup.add(headBase);
+
+    // Hair Cap
+    const hairCap = new THREE.Mesh(
+      new THREE.SphereGeometry(0.56, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.55),
+      hairMat
+    );
+    hairCap.rotation.x = -0.2;
+    hairCap.position.set(0, 0.05, -0.05);
+    headGroup.add(hairCap);
+
+    // SEAN'S FACE DECAL: Mapped from sean-face.png or sean.png onto the 3D head
+    const textureLoader = new THREE.TextureLoader();
+    const faceTex = textureLoader.load('./sean-face.png', undefined, undefined, () => {
+      // Fallback to sean.png if sean-face is not yet cached
+      textureLoader.load('./sean.png', (fallbackTex) => {
+        faceMesh.material = new THREE.MeshBasicMaterial({
+          map: fallbackTex,
+          transparent: true,
+          side: THREE.DoubleSide
+        });
+      });
     });
-    const targetRing = new THREE.Mesh(targetRingGeo, targetRingMat);
-    targetRing.rotation.x = -Math.PI / 2;
-    targetRing.position.y = 0.68;
-    targetRing.visible = false;
-    scene.add(targetRing);
+    faceTex.magFilter = THREE.NearestFilter;
 
-    // Raycasting for clicking ground or buildings
+    const faceGeo = new THREE.PlaneGeometry(0.72, 0.68);
+    const faceMat = new THREE.MeshBasicMaterial({
+      map: faceTex,
+      transparent: true,
+      side: THREE.DoubleSide
+    });
+    const faceMesh = new THREE.Mesh(faceGeo, faceMat);
+    faceMesh.position.set(0, 0.02, 0.52);
+    headGroup.add(faceMesh);
+
+    // Raycasting for clicking buildings (NOT clicking ground to move)
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
+    let pointerDownPos = { x: 0, y: 0 };
 
     const onPointerDown = (event: MouseEvent) => {
+      pointerDownPos = { x: event.clientX, y: event.clientY };
+    };
+
+    const onPointerUp = (event: MouseEvent) => {
       if (activeProduct) return;
+      const dx = Math.abs(event.clientX - pointerDownPos.x);
+      const dy = Math.abs(event.clientY - pointerDownPos.y);
+      // If mouse was dragged more than 5px, it was camera orbit, ignore
+      if (dx > 5 || dy > 5) return;
+
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -860,22 +1086,16 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
           return;
         }
       }
-
-      // Check click on ground / islands
-      const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.65);
-      const hitPoint = new THREE.Vector3();
-      if (raycaster.ray.intersectPlane(groundPlane, hitPoint)) {
-        clickTargetRef.current = hitPoint;
-        targetRing.position.set(hitPoint.x, 0.68, hitPoint.z);
-        targetRing.visible = true;
-      }
     };
 
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('pointerup', onPointerUp);
 
-    // 11. Animation & Physics Loop
+    // 11. Animation, Collision Physics & Camera Follow Loop
     let animationId: number;
     let ticks = 0;
+    let lastPlayerX = playerStateRef.current.x;
+    let lastPlayerZ = playerStateRef.current.z;
 
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -889,49 +1109,58 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       const p = playerStateRef.current;
       const keys = keysRef.current;
 
-      // Character Movement
-      let moveX = 0;
-      let moveZ = 0;
+      // 1. Calculate Keyboard Movement (Relative to Camera orientation)
+      let inputX = 0;
+      let inputZ = 0;
 
       if (!activeProduct) {
-        if (keys['w'] || keys['arrowup']) moveZ -= 1;
-        if (keys['s'] || keys['arrowdown']) moveZ += 1;
-        if (keys['a'] || keys['arrowleft']) moveX -= 1;
-        if (keys['d'] || keys['arrowright']) moveX += 1;
+        if (keys['w'] || keys['arrowup']) inputZ -= 1;
+        if (keys['s'] || keys['arrowdown']) inputZ += 1;
+        if (keys['a'] || keys['arrowleft']) inputX -= 1;
+        if (keys['d'] || keys['arrowright']) inputX += 1;
 
         if (joystickVector.x !== 0 || joystickVector.y !== 0) {
-          moveX = joystickVector.x;
-          moveZ = joystickVector.y;
-          clickTargetRef.current = null;
-          targetRing.visible = false;
-        }
-
-        if (clickTargetRef.current && moveX === 0 && moveZ === 0) {
-          const dx = clickTargetRef.current.x - p.x;
-          const dz = clickTargetRef.current.z - p.z;
-          const dist = Math.hypot(dx, dz);
-          if (dist > 0.4) {
-            moveX = dx / dist;
-            moveZ = dz / dist;
-          } else {
-            clickTargetRef.current = null;
-            targetRing.visible = false;
-          }
+          inputX = joystickVector.x;
+          inputZ = joystickVector.y;
         }
       }
 
-      const isMoving = moveX !== 0 || moveZ !== 0;
-      p.isMoving = isMoving;
+      const hasInput = inputX !== 0 || inputZ !== 0;
+      p.isMoving = hasInput;
 
-      if (isMoving) {
-        const len = Math.hypot(moveX, moveZ);
-        p.x += (moveX / len) * MOVE_SPEED;
-        p.z += (moveZ / len) * MOVE_SPEED;
+      if (hasInput) {
+        // Project movement onto camera ground plane
+        const camDir = new THREE.Vector3();
+        camera.getWorldDirection(camDir);
+        camDir.y = 0;
+        camDir.normalize();
 
-        if (moveX < -0.05) p.facingLeft = true;
-        else if (moveX > 0.05) p.facingLeft = false;
+        const camRight = new THREE.Vector3(-camDir.z, 0, camDir.x).normalize();
 
-        p.walkTimer += 0.24;
+        const moveDir = new THREE.Vector3()
+          .addScaledVector(camRight, inputX)
+          .addScaledVector(camDir, -inputZ)
+          .normalize();
+
+        const targetX = p.x + moveDir.x * MOVE_SPEED;
+        const targetZ = p.z + moveDir.z * MOVE_SPEED;
+
+        // COLLISION DETECTION: Wall-sliding response
+        if (isWalkable(targetX, targetZ)) {
+          p.x = targetX;
+          p.z = targetZ;
+        } else if (isWalkable(targetX, p.z)) {
+          // Slide along X
+          p.x = targetX;
+        } else if (isWalkable(p.x, targetZ)) {
+          // Slide along Z
+          p.z = targetZ;
+        }
+
+        // Smooth rotation to face moving direction
+        p.targetRotationY = Math.atan2(moveDir.x, moveDir.z);
+
+        p.walkTimer += 0.25;
         p.stepTimer++;
         if (p.stepTimer % 20 === 0) {
           sound.playStep();
@@ -942,29 +1171,56 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
         }
       }
 
-      // Update Sean avatar mesh
-      playerMesh.scale.x = p.facingLeft ? -1 : 1;
-      const bob = p.isMoving ? Math.sin(p.walkTimer) * 0.16 : Math.sin(ticks * 0.05) * 0.04;
-      playerMesh.position.set(p.x, 0.65 + seanHeight / 2 + bob, p.z);
-      // Billboard Sean to face the camera
-      playerMesh.rotation.y = camera.rotation.y;
-      playerShadow.position.set(p.x, 0.67, p.z);
+      // Smoothly rotate character toward target direction
+      // Handle angular wrap around
+      let diff = p.targetRotationY - p.rotationY;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      p.rotationY += diff * 0.25;
 
-      if (targetRing.visible) {
-        targetRing.scale.setScalar(1 + Math.sin(ticks * 0.15) * 0.15);
+      characterGroup.position.set(p.x, 0.65, p.z);
+      characterGroup.rotation.y = p.rotationY;
+
+      // Walking Limb Animations
+      if (p.isMoving) {
+        const swing = Math.sin(p.walkTimer) * 0.65;
+        legL.rotation.x = swing;
+        legR.rotation.x = -swing;
+        armL.rotation.x = -swing * 0.7;
+        armR.rotation.x = swing * 0.7;
+        upperBody.position.y = 0.65 + Math.abs(Math.sin(p.walkTimer)) * 0.1;
+      } else {
+        // Idle breathing
+        legL.rotation.x = 0;
+        legR.rotation.x = 0;
+        armL.rotation.x = 0;
+        armR.rotation.x = 0;
+        upperBody.position.y = 0.65 + Math.sin(ticks * 0.05) * 0.02;
       }
 
-      // Floating clouds animation
+      // 2. Camera Follows Player Position (Preserving user's Orbit rotation)
+      const deltaX = p.x - lastPlayerX;
+      const deltaZ = p.z - lastPlayerZ;
+      if (deltaX !== 0 || deltaZ !== 0) {
+        camera.position.x += deltaX;
+        camera.position.z += deltaZ;
+        controls.target.x += deltaX;
+        controls.target.z += deltaZ;
+      }
+      lastPlayerX = p.x;
+      lastPlayerZ = p.z;
+
+      // 3. Clouds Animation
       clouds.forEach((cl, i) => {
         cl.position.x += 0.035 + (i % 3) * 0.01;
         if (cl.position.x > 90) cl.position.x = -90;
       });
 
-      // Rotating Fountain Core
+      // 4. Rotating Elements
       crestCube.rotation.y += 0.015;
       crestCube.rotation.x += 0.008;
 
-      // Check proximity to buildings
+      // 5. Proximity Detection
       let currentNearby: FixoProduct | null = null;
       for (const bm of buildingMeshes) {
         const pos = islandCenters.get(bm.product.id);
@@ -978,6 +1234,12 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
         const pulse = isClose ? Math.sin(ticks * 0.15) * 0.3 + 0.8 : 0.45;
         (bm.beacon.material as THREE.MeshBasicMaterial).opacity = pulse;
         bm.beacon.scale.setScalar(isClose ? 1.15 : 1.0);
+
+        // Sub-elements rotation
+        const turbine = bm.group.getObjectByName('turbine_hub');
+        if (turbine) {
+          turbine.rotation.z += 0.08;
+        }
       }
       setNearbyProduct(currentNearby);
 
@@ -992,6 +1254,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       cancelAnimationFrame(animationId);
       window.removeEventListener('resize', handleResize);
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+      renderer.domElement.removeEventListener('pointerup', onPointerUp);
       if (renderer.domElement.parentElement) {
         renderer.domElement.parentElement.removeChild(renderer.domElement);
       }
@@ -1001,7 +1264,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
 
   return (
     <div className="relative w-full h-full select-none">
-      <div ref={mountRef} className="absolute inset-0 cursor-crosshair touch-none" />
+      <div ref={mountRef} className="absolute inset-0 cursor-grab active:cursor-grabbing touch-none" />
 
       {/* Heart Island Floating Interaction Card */}
       {nearbyProduct && !activeProduct && (

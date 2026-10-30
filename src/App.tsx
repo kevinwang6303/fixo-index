@@ -245,10 +245,10 @@ export default function App() {
         />
       </div>
 
-      {/* 3. Mascot Pill (Heart Island signature mascot: •ᴗ• Sean · 點一格，開始探索) */}
+      {/* 3. Mascot Pill (Heart Island signature mascot: •ᴗ• Sean · 鍵盤移動，滑鼠旋轉視角) */}
       <div className="absolute bottom-20 left-4 z-20 pointer-events-auto hidden sm:flex items-center gap-2 bg-[#fff8f4]/90 backdrop-blur-md border border-[#c5b5a7]/60 px-3.5 py-1.5 rounded-full shadow-lg text-xs font-medium text-slate-700">
         <span className="text-[#db6a41] font-bold text-sm">•ᴗ•</span>
-        <span>Sean · 點擊六角島嶼或按 WASD 漫步</span>
+        <span>Sean · 按 WASD 漫步，滑鼠旋轉視角</span>
       </div>
 
       {/* 4. Welcome / Gameplay Tip Banner */}
@@ -264,7 +264,7 @@ export default function App() {
                 <Sparkles className="w-3.5 h-3.5 text-[#db6a41]" />
               </div>
               <p className="text-slate-600 leading-relaxed">
-                完全復刻 <strong>Heart Island</strong> 陽光六角蜂巢群島樣式！使用滑鼠點擊任意島嶼、或按 <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-300 font-mono text-[#db6a41]">WASD</kbd> 控制 Sean 漫步，點擊下方快捷島嶼塢可直接飛往展館！
+                使用鍵盤 <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-300 font-mono text-[#db6a41]">WASD</kbd> 或方向鍵控制 Sean 漫步，滑鼠可自由<strong>按住拖曳旋轉 3D 視角</strong>！內建島嶼與橋樑防掉落碰撞檢測，靠近展館按 <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-300 font-mono text-[#db6a41]">SPACE</kbd> 即可探索！
               </p>
             </div>
             <button
