@@ -18,7 +18,7 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       text: 'text-amber-400'
     },
     building: {
-      name: '認證總督府',
+      name: '高軟園區服務中樞',
       symbol: '🏛️',
       x: 1200,
       y: 280,
@@ -57,7 +57,7 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       text: 'text-cyan-400'
     },
     building: {
-      name: '網路立體中樞',
+      name: '亞灣跨海光纖中樞',
       symbol: '🌐',
       x: 880,
       y: 620,
@@ -96,7 +96,7 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       text: 'text-blue-400'
     },
     building: {
-      name: '超算核心主塔',
+      name: '鴻海高軟 AI 超算中心',
       symbol: '⚡',
       x: 1200,
       y: 600,
@@ -135,7 +135,7 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       text: 'text-emerald-400'
     },
     building: {
-      name: '數據深水海港',
+      name: '高雄港數據深水海港',
       symbol: '⚓',
       x: 1540,
       y: 620,
@@ -174,7 +174,7 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       text: 'text-purple-400'
     },
     building: {
-      name: '智慧流量燈塔',
+      name: '高雄一港口航標燈塔',
       symbol: '⚖️',
       x: 880,
       y: 960,
@@ -213,7 +213,7 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       text: 'text-sky-400'
     },
     building: {
-      name: '海神容器船塢',
+      name: '旅運中心海神容器碼頭',
       symbol: '🐳',
       x: 1200,
       y: 960,
@@ -252,7 +252,7 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       text: 'text-pink-400'
     },
     building: {
-      name: '密鑰地下金庫',
+      name: '亞灣金融密鑰金庫',
       symbol: '🔐',
       x: 1540,
       y: 960,
@@ -291,7 +291,7 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       text: 'text-orange-400'
     },
     building: {
-      name: '雲端未來工作站',
+      name: '高軟雲端創新工作站',
       symbol: '🖥️',
       x: 880,
       y: 1300,
@@ -330,7 +330,7 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       text: 'text-indigo-400'
     },
     building: {
-      name: '數據智慧觀測台',
+      name: '音浪大數據觀測站',
       symbol: '📊',
       x: 1200,
       y: 1300,
@@ -369,7 +369,7 @@ export const FIXO_PRODUCTS: FixoProduct[] = [
       text: 'text-teal-400'
     },
     building: {
-      name: '綠色計量觀測雷達',
+      name: '綠能港灣光伏計量站',
       symbol: '📈',
       x: 1540,
       y: 1300,
