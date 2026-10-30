@@ -52,6 +52,23 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
   }>({});
 
   const [nearbyProduct, setNearbyProduct] = useState<FixoProduct | null>(null);
+  const nearbyProductRef = useRef<FixoProduct | null>(null);
+
+  // Keep references to dynamic props to prevent effect teardown/re-creation loops
+  const activeProductRef = useRef(activeProduct);
+  activeProductRef.current = activeProduct;
+
+  const joystickVectorRef = useRef(joystickVector);
+  joystickVectorRef.current = joystickVector;
+
+  const onOpenProductRef = useRef(onOpenProduct);
+  onOpenProductRef.current = onOpenProduct;
+
+  const setPlayerPosRef = useRef(setPlayerPos);
+  setPlayerPosRef.current = setPlayerPos;
+
+  const productsRef = useRef(products);
+  productsRef.current = products;
 
   // Character internal physics state (Continuous smooth position & velocity)
   const playerStateRef = useRef({
@@ -147,7 +164,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
   // Robust Keyboard event listeners (Works across all IME / CapsLock / Key variations)
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (activeProduct) return;
+      if (activeProductRef.current) return;
       const key = (e.key || '').toLowerCase();
       const code = (e.code || '').toLowerCase();
 
@@ -161,10 +178,11 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
         e.preventDefault();
       }
 
-      if ((e.key === ' ' || code === 'space' || key === 'e' || code === 'keye') && nearbyProduct) {
+      const nearby = nearbyProductRef.current;
+      if ((e.key === ' ' || code === 'space' || key === 'e' || code === 'keye') && nearby) {
         e.preventDefault();
         sound.playInteract();
-        onOpenProduct(nearbyProduct);
+        onOpenProductRef.current(nearby);
       }
     };
 
@@ -184,7 +202,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
-  }, [nearbyProduct, activeProduct, onOpenProduct]);
+  }, []);
 
   // Main Three.js Scene Setup & Render Loop
   useEffect(() => {
@@ -204,7 +222,8 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
     camera.position.set(0, 26, 28);
     cameraRef.current = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    container.innerHTML = '';
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
@@ -1009,7 +1028,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
     };
 
     const onPointerUp = (event: MouseEvent) => {
-      if (activeProduct) return;
+      if (activeProductRef.current) return;
       const dx = Math.abs(event.clientX - pointerDownPos.x);
       const dy = Math.abs(event.clientY - pointerDownPos.y);
       if (dx > 5 || dy > 5) return; // Ignore drag/orbit
@@ -1024,7 +1043,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
         const hits = raycaster.intersectObjects(bm.group.children, true);
         if (hits.length > 0) {
           sound.playInteract();
-          onOpenProduct(bm.product);
+          onOpenProductRef.current(bm.product);
           return;
         }
       }
@@ -1038,6 +1057,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
     let animationId: number;
     let ticks = 0;
     let lastUiSyncTime = performance.now();
+    const lastSyncedPos = { x: playerStateRef.current.x, z: playerStateRef.current.z };
 
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -1056,15 +1076,16 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       let inputX = 0;
       let inputZ = 0;
 
-      if (!activeProduct) {
+      if (!activeProductRef.current) {
         if (keys['up']) inputZ -= 1;
         if (keys['down']) inputZ += 1;
         if (keys['left']) inputX -= 1;
         if (keys['right']) inputX += 1;
 
-        if (joystickVector.x !== 0 || joystickVector.y !== 0) {
-          inputX = joystickVector.x;
-          inputZ = joystickVector.y;
+        const jv = joystickVectorRef.current;
+        if (jv.x !== 0 || jv.y !== 0) {
+          inputX = jv.x;
+          inputZ = jv.y;
         }
       }
 
@@ -1163,11 +1184,15 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       camera.position.add(camShift);
       controls.update();
 
-      // Throttle React state update to 250ms (Eliminates React re-render micro-stutters!)
+      // Throttle React state update to 250ms (ONLY if player actually moved > 0.15 units)
       const now = performance.now();
       if (now - lastUiSyncTime > 250) {
         lastUiSyncTime = now;
-        setPlayerPos({ x: p.x, z: p.z });
+        if (Math.hypot(p.x - lastSyncedPos.x, p.z - lastSyncedPos.z) > 0.15) {
+          lastSyncedPos.x = p.x;
+          lastSyncedPos.z = p.z;
+          setPlayerPosRef.current({ x: p.x, z: p.z });
+        }
       }
 
       // Animated Kaohsiung Light Rail Tram (輕軌巡迴動畫)
@@ -1203,7 +1228,12 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
           turbine.rotation.z += 0.08;
         }
       }
-      setNearbyProduct(currentNearby);
+
+      // ONLY update state if proximity target actually changed
+      if (currentNearby?.id !== nearbyProductRef.current?.id) {
+        nearbyProductRef.current = currentNearby;
+        setNearbyProduct(currentNearby);
+      }
 
       renderer.render(scene, camera);
       animationId = requestAnimationFrame(animate);
@@ -1221,7 +1251,7 @@ export const HeartIsland3D: React.FC<HeartIsland3DProps> = ({
       }
       renderer.dispose();
     };
-  }, [products, activeProduct, joystickVector, setPlayerPos, onOpenProduct]);
+  }, []);
 
   return (
     <div className="relative w-full h-full select-none">

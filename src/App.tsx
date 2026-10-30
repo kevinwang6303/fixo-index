@@ -77,13 +77,33 @@ export default function App() {
     });
   }, []);
 
-  const handleTeleport = (product: FixoProduct) => {
+  const handleTeleport = useCallback((product: FixoProduct) => {
     // Fly to that hex island
     setTeleportTarget({
       x: product.building.pos3D.x,
       z: product.building.pos3D.z + 2.8
     });
-  };
+  }, []);
+
+  const handleOpenProduct = useCallback((product: FixoProduct) => {
+    setActiveProduct(product);
+  }, []);
+
+  const handleCloseProduct = useCallback(() => {
+    setActiveProduct(null);
+  }, []);
+
+  const handleClearTeleport = useCallback(() => {
+    setTeleportTarget(null);
+  }, []);
+
+  const handleJoystickMove = useCallback((x: number, y: number) => {
+    setJoystickVector({ x, y });
+  }, []);
+
+  const handleJoystickStop = useCallback(() => {
+    setJoystickVector({ x: 0, y: 0 });
+  }, []);
 
   const toggleSound = () => {
     const next = !isSoundOn;
@@ -98,12 +118,12 @@ export default function App() {
       <HeartIsland3D
         products={FIXO_PRODUCTS}
         activeProduct={activeProduct}
-        onOpenProduct={(p) => setActiveProduct(p)}
+        onOpenProduct={handleOpenProduct}
         playerPos={playerPos}
         setPlayerPos={setPlayerPos}
         joystickVector={joystickVector}
         teleportTarget={teleportTarget}
-        clearTeleport={() => setTeleportTarget(null)}
+        clearTeleport={handleClearTeleport}
         timeOfDay={timeOfDay}
         isBirdEye={isBirdEye}
       />
@@ -292,8 +312,8 @@ export default function App() {
       {showJoystick && (
         <div className="absolute bottom-20 left-6 z-30 pointer-events-auto">
           <VirtualJoystick
-            onMove={(x, y) => setJoystickVector({ x, y })}
-            onStop={() => setJoystickVector({ x: 0, y: 0 })}
+            onMove={handleJoystickMove}
+            onStop={handleJoystickStop}
           />
         </div>
       )}
@@ -311,7 +331,7 @@ export default function App() {
       {/* 6. Product Detail Modal */}
       <ProductModal
         product={activeProduct}
-        onClose={() => setActiveProduct(null)}
+        onClose={handleCloseProduct}
         onVisited={handleVisited}
       />
 
@@ -320,7 +340,7 @@ export default function App() {
         products={FIXO_PRODUCTS}
         visitedIds={visitedIds}
         onTeleport={handleTeleport}
-        onOpenProduct={(p) => setActiveProduct(p)}
+        onOpenProduct={handleOpenProduct}
         isOpen={isQuickNavOpen}
         onClose={() => setIsQuickNavOpen(false)}
       />
